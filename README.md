@@ -8,7 +8,7 @@ Ce bot affiche deux boutons dans deux salons différents :
 | Commande de véhicule | 🛒 Commander un véhicule | Nom RP, Véhicule souhaité, Couleur / Options, Budget, Disponibilités pour la livraison |
 
 Chaque formulaire rempli arrive dans un **salon de réception** (par exemple un salon réservé au staff), avec la mention de la personne qui l'a envoyé.
-Sous chaque demande, un bouton **« 🎫 Je me charge du ticket »** permet à un membre du staff de prendre la demande : le bouton devient gris, affiche son nom, et la personne est mentionnée dans le salon. Une demande ne peut être prise que par une seule personne.
+Sous chaque demande, un bouton **« 🎫 Je me charge du ticket »** permet à un membre du staff de prendre la demande : le bouton devient gris et affiche son nom. Une demande ne peut être prise que par une seule personne.
 
 > ℹ️ Discord limite un pop-up à **5 champs**. Le formulaire de commande en a 6 : « Couleur » et « Options » sont donc regroupés dans un seul champ.
 

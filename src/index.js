@@ -105,8 +105,6 @@ async function prendreTicket(interaction) {
     embeds: [embed],
     components: [creerBoutonPrise(`Pris en charge par ${nom}`, true)],
   });
-  // Un message classique (pas un champ d'embed) est nécessaire pour que la personne soit notifiée.
-  await interaction.followUp({ content: `${interaction.user} se charge de cette demande 🎫` });
 }
 
 function creerPanneau(form) {
