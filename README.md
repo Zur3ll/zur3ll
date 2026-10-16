@@ -42,9 +42,9 @@ Prérequis : [Node.js](https://nodejs.org) version 18 ou plus.
 3. Copie le fichier `.env.example`, renomme la copie en `.env` et remplis-la :
    ```env
    DISCORD_TOKEN=ton_token_ici
-   SALON_RDV_ID=123456789012345678
-   SALON_COMMANDE_ID=123456789012345678
-   SALON_RECEPTION_ID=123456789012345678
+   SALON_RDV_ID=id_du_salon_ici
+   SALON_COMMANDE_ID=id_du_salon_ici
+   SALON_RECEPTION_ID=id_du_salon_ici
    ```
 4. Lance le bot :
    ```bash
