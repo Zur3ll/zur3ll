@@ -72,13 +72,42 @@ const FORMULAIRES = {
       { id: 'vehicule', label: 'Véhicule souhaité', style: TextInputStyle.Short, placeholder: 'Ex : Elegy RH8' },
       // Couleur + Options regroupés : un pop-up Discord accepte 5 champs maximum.
       { id: 'couleur_options', label: 'Couleur / Options (jantes, tuning…)', style: TextInputStyle.Paragraph, placeholder: 'Ex : Noir mat, jantes chromées, full tuning' },
-      { id: 'budget', label: 'Budget', style: TextInputStyle.Short, placeholder: 'Ex : 150 000 $' },
+      { id: 'budget', label: 'Budget', style: TextInputStyle.Short, placeholder: 'Ex : 150 000 €' },
       { id: 'dispos', label: 'Disponibilités pour la livraison', style: TextInputStyle.Paragraph, placeholder: 'Ex : demain après 20h' },
     ],
   },
 };
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+
+// Bouton posté sous chaque demande reçue, pour dire qui s'en occupe.
+const BOUTON_PRISE_ID = 'prendre_ticket';
+
+function creerBoutonPrise(libelle = 'Je me charge du ticket', desactive = false) {
+  const bouton = new ButtonBuilder()
+    .setCustomId(BOUTON_PRISE_ID)
+    .setLabel(libelle)
+    .setEmoji('🎫')
+    .setStyle(desactive ? ButtonStyle.Secondary : ButtonStyle.Success)
+    .setDisabled(desactive);
+  return new ActionRowBuilder().addComponents(bouton);
+}
+
+// Un seul membre peut prendre le ticket : le bouton devient gris et affiche son nom.
+async function prendreTicket(interaction) {
+  const nom = interaction.member?.displayName ?? interaction.user.username;
+  const embed = EmbedBuilder.from(interaction.message.embeds[0]).addFields({
+    name: 'Pris en charge par',
+    value: `${interaction.user}`,
+  });
+
+  await interaction.update({
+    embeds: [embed],
+    components: [creerBoutonPrise(`Pris en charge par ${nom}`, true)],
+  });
+  // Un message classique (pas un champ d'embed) est nécessaire pour que la personne soit notifiée.
+  await interaction.followUp({ content: `${interaction.user} se charge de cette demande 🎫` });
+}
 
 function creerPanneau(form) {
   const embed = new EmbedBuilder()
@@ -147,6 +176,8 @@ client.on(Events.InteractionCreate, async (interaction) => {
   try {
     // Clic sur un bouton -> ouverture du pop-up
     if (interaction.isButton()) {
+      if (interaction.customId === BOUTON_PRISE_ID) return await prendreTicket(interaction);
+
       const form = Object.values(FORMULAIRES).find((f) => f.boutonId === interaction.customId);
       if (form) await interaction.showModal(creerModal(form));
       return;
@@ -176,7 +207,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
         )
         .setTimestamp();
 
-      await reception.send({ embeds: [embed] });
+      await reception.send({ embeds: [embed], components: [creerBoutonPrise()] });
       await interaction.reply({
         content: '✅ Ta demande a bien été envoyée ! Quelqu\'un te répondra au plus vite.',
         ephemeral: true,
