@@ -26,6 +26,12 @@ namespace NovaApps.Core
             cible?.Notify(titre, message, type);
         }
 
+        /// <summary>Admin, ou membre d'une des entreprises listées (concession, police, journal...).</summary>
+        public static bool Membre(Player joueur, ICollection<int> entreprises)
+        {
+            return joueur.IsAdmin || (joueur.HasBiz() && entreprises.Contains(joueur.biz.Id));
+        }
+
         public static IEnumerable<Player> TousEnLigne()
         {
             return Nova.server.Players.Where(p => p?.character != null);

@@ -25,6 +25,11 @@ namespace NovaApps
         public PoleTravailConfig PoleTravail = new PoleTravailConfig();
         public CapitalMotorsConfig CapitalMotors = new CapitalMotorsConfig();
         public BlueLightfoxConfig BlueLightfox = new BlueLightfoxConfig();
+        public LeBonNeoConfig LeBonNeo = new LeBonNeoConfig();
+        public PoliceConfig Police = new PoliceConfig();
+        public JournalConfig Journal = new JournalConfig();
+        public MeteoConfig Meteo = new MeteoConfig();
+        public AgendaConfig Agenda = new AgendaConfig();
     }
 
     public class Position
@@ -133,3 +138,81 @@ namespace NovaApps
         public string Contenu;
     }
 }
+
+    public class LeBonNeoConfig
+    {
+        /// <summary>Une annonce disparaît des résultats après ce nombre de jours (le vendeur peut la remonter).</summary>
+        public int DureeJours = 14;
+
+        /// <summary>Facultatif : webhook d'un salon Discord où annoncer les nouvelles annonces.</summary>
+        public string WebhookDiscord = "";
+
+        public List<string> Categories = new List<string> { "Véhicules", "Immobilier", "Objets", "Services", "Autre" };
+    }
+
+    public class PoliceConfig
+    {
+        public string Nom = "Police Nationale";
+
+        /// <summary>ID des entreprises (en jeu) dont les membres sont des agents. Les admins ont toujours accès.</summary>
+        public List<int> EntreprisesPolice = new List<int>();
+
+        /// <summary>Montant maximum d'une amende.</summary>
+        public int AmendeMax = 10000;
+
+        /// <summary>Si true, le fichier des personnes (casier, notes) ne se consulte que depuis un ordinateur.</summary>
+        public bool FichierSurOrdinateurUniquement = true;
+    }
+
+    public class JournalConfig
+    {
+        public string Nom = "Le Nova Matin";
+
+        /// <summary>ID des entreprises (en jeu) dont les membres sont journalistes. Les admins ont toujours accès.</summary>
+        public List<int> EntreprisesJournal = new List<int>();
+
+        /// <summary>Si true, l'écriture des articles se fait uniquement depuis un ordinateur.</summary>
+        public bool RedactionSurOrdinateurUniquement = true;
+
+        /// <summary>Facultatif : webhook d'un salon Discord où publier les articles.</summary>
+        public string WebhookDiscord = "";
+
+        public List<string> Rubriques = new List<string> { "Actualité", "Faits divers", "Économie", "Politique", "Sport", "Culture", "Communiqué officiel" };
+    }
+
+    public class MeteoConfig
+    {
+        public string Ville = "Amboise";
+
+        /// <summary>
+        /// true : le plugin change lui-même la météo du serveur selon ses prévisions (prévisions toujours justes).
+        /// false : les prévisions sont seulement affichées dans l'appli, sans toucher à la météo du jeu.
+        /// </summary>
+        public bool PiloterLaMeteo = true;
+
+        /// <summary>Durée d'un créneau de prévision, en minutes réelles.</summary>
+        public int DureeCreneauMinutes = 60;
+
+        /// <summary>Chances de chaque temps (noms de la météo du jeu). Mets 0 pour ne jamais l'avoir.</summary>
+        public Dictionary<string, int> Probabilites = new Dictionary<string, int>
+        {
+            ["ClearSky"] = 40,
+            ["Cloudy1"] = 25,
+            ["Foggy"] = 8,
+            ["LightRain"] = 15,
+            ["HeavyRain"] = 8,
+            ["Storm"] = 4,
+        };
+
+        /// <summary>ID des entreprises (ex. le journal) qui peuvent modifier les prévisions. Les admins ont toujours accès.</summary>
+        public List<int> EntreprisesMeteo = new List<int>();
+    }
+
+    public class AgendaConfig
+    {
+        /// <summary>Si true, seuls les membres d'une entreprise (et les admins) peuvent créer un événement.</summary>
+        public bool CreationReserveeAuxEntreprises = false;
+
+        /// <summary>Les participants reçoivent un rappel ce nombre de minutes avant le début.</summary>
+        public int RappelMinutes = 15;
+    }

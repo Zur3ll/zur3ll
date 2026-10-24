@@ -8,6 +8,11 @@ Plugin serveur Nova-Life : Amboise qui ajoute des applications au **téléphone*
 | 📱 Téléphone | **Neonous** | Rencontres façon Tinder : profil (prénom, âge, genre, ce que tu cherches, bio), découverte des profils compatibles (Passer / Liker), match quand c'est réciproque, messagerie entre matchs, masquer / supprimer son profil. |
 | 📱 + 💻 | **Pôle Travail** | Même appli et **mêmes données** sur le téléphone et l'ordinateur. Offres d'emploi, recherche par mot-clé, candidatures (le recruteur est notifié), suivi des candidatures, dépôt d'une recherche d'emploi (CV). Espace recruteur : publier une offre, voir les candidatures, accepter / refuser (le candidat est notifié), consulter les recherches d'emploi. **Publication d'offres et dépôt de CV sur l'ordinateur** (option pour l'autoriser aussi sur le téléphone). |
 | 📱 Téléphone | **Capital Motors** | Catalogue de la concession, **commande de véhicule**, suivi de la commande, rendez-vous atelier. Espace concession (membres de l'entreprise) : accepter / refuser, ajouter une note, marquer « prête », **livrer** → le véhicule est créé directement dans le garage du client. Les commandes et RDV arrivent aussi **dans le salon Discord du bot Garage / Concession, avec le bouton « 🎫 Je me charge du ticket »**. |
+| 📱 + 💻 | **LeBonNeo** | Petites annonces façon Leboncoin : catégories, recherche, dépôt d'annonce (titre, prix, description, contact), messagerie acheteur ↔ vendeur avec notifications, « vendu », remonter son annonce (1 fois / 24 h), expiration automatique. Option : annonce des nouvelles annonces sur Discord. |
+| 📱 + 💻 | **Police** | **Citoyens** : appeler le 17 (alerte immédiate aux agents en ville), porter plainte et suivre sa plainte, voir et **payer ses amendes**, consulter les avis de recherche. **Agents** (membres de l'entreprise police) : prendre les appels, traiter / classer les plaintes, dresser une amende, émettre / lever un avis de recherche (alerte à toute la ville), **fichier des personnes** avec casier, notes internes, amendes impayées (sur ordinateur par défaut). |
+| 📱 + 💻 | **Journal RP** | Journal du serveur (nom configurable, « Le Nova Matin » par défaut) : article à la une, rubriques, recherche, commentaires. **Journalistes** (membres de l'entreprise du journal) : écriture d'articles paragraphe par paragraphe (sur ordinateur par défaut), publication normale ou en **flash info** (notification à toute la ville). Option : publication sur Discord. |
+| 📱 Téléphone | **Météo** | Temps actuel, température, vent et prévisions des 5 prochaines heures. Par défaut le plugin **pilote la vraie météo du serveur** selon ses prévisions : elles sont donc toujours justes. Alerte quand un orage arrive. Les météorologues (entreprise configurée) peuvent modifier les prévisions. |
+| 📱 Téléphone | **Agenda** | Événements de la ville : créer (nom, date, lieu, description, organisateur), « Je participe », **rappel automatique** aux participants 15 min avant, annulation avec notification. Les événements créés par un admin sont « officiels » et annoncés à tous. |
 | 💻 Ordinateur | **Discord** | Lit les **vrais salons** de ton serveur Discord et permet d'y **écrire depuis le jeu** (sous le nom RP du joueur si tu configures un webhook). Affiche le lien d'invitation. |
 | 💻 Ordinateur | **Blue Lightfox** | Navigateur avec de **vraies recherches Internet** : Google si tu configures une clé API, sinon Wikipédia (gratuit, sans clé). Ouvre les résumés d'articles, envoie le lien dans le chat. Propose aussi les « sites » du serveur (pole-travail.nl, capital-motors.nl, sites perso dans la config). |
 
@@ -44,7 +49,7 @@ Prérequis : Nova-Life installé via Steam, et le [SDK .NET](https://dotnet.micr
 
 1. Copie `NovaApps.dll` dans le dossier `Plugins` de ton serveur.
 2. Démarre le serveur une fois : le dossier `Plugins/NovaApps/` est créé avec `config.json` et les fichiers de données
-   (`n.json`, `neonous.json`, `pole-travail.json`, `capital-motors.json`).
+   (`n.json`, `neonous.json`, `lebonneo.json`, `pole-travail.json`, `capital-motors.json`, `police.json`, `journal.json`, `agenda.json`).
 3. Arrête le serveur, remplis `config.json` (voir ci-dessous) et redémarre.
 
 ## 3. Configuration (`Plugins/NovaApps/config.json`)
@@ -94,8 +99,42 @@ Prérequis : Nova-Life installé via Steam, et le [SDK .NET](https://dotnet.micr
 - `WebhookDiscord` (facultatif) : chaque post N est recopié dans ce salon Discord (« fil N » visible hors jeu).
 - `LongueurMax`, `PostsAffiches` : taille max d'un post et nombre de posts dans le fil.
 
+### LeBonNeo
+- `DureeJours` : nombre de jours avant qu'une annonce disparaisse des résultats (14 par défaut). Le vendeur peut la remonter.
+- `Categories` : liste des catégories proposées.
+- `WebhookDiscord` (facultatif) : salon Discord où annoncer les nouvelles annonces.
+
+### Police
+```json
+"Police": { "Nom": "Police Nationale", "EntreprisesPolice": [5], "AmendeMax": 10000, "FichierSurOrdinateurUniquement": true }
+```
+- `EntreprisesPolice` : ID de l'entreprise de la police en jeu. Ses membres ont les menus **[Agent]**.
+- Les amendes se paient **en liquide** depuis l'appli : l'argent est retiré au joueur et l'agent est prévenu.
+- `FichierSurOrdinateurUniquement` : le casier / les notes ne se consultent que sur un ordinateur du commissariat (pense à `/ordi_ajouter` devant les PC).
+
+### Journal
+```json
+"Journal": { "Nom": "Le Nova Matin", "EntreprisesJournal": [8], "RedactionSurOrdinateurUniquement": true, "WebhookDiscord": "" }
+```
+- `EntreprisesJournal` : ID de l'entreprise du journal en jeu. Ses membres peuvent écrire des articles.
+- `Rubriques` : liste des rubriques proposées.
+- Les champs de saisie du jeu étant courts, un article s'écrit **paragraphe par paragraphe**. Le brouillon reste en mémoire tant que le serveur tourne.
+
+### Météo
+```json
+"Meteo": { "Ville": "Amboise", "PiloterLaMeteo": true, "DureeCreneauMinutes": 60, "Probabilites": { "ClearSky": 40, "Cloudy1": 25, "Foggy": 8, "LightRain": 15, "HeavyRain": 8, "Storm": 4 }, "EntreprisesMeteo": [] }
+```
+- `PiloterLaMeteo` : `true` = le plugin change la météo du serveur à chaque créneau (prévisions exactes). Mets `false` si un autre plugin gère déjà la météo : les prévisions seront alors seulement indicatives.
+- `Probabilites` : chances de chaque temps (noms de la météo du jeu). Mets 0 pour supprimer un temps (par ex. `"Storm": 0`).
+- `EntreprisesMeteo` : entreprises autorisées à modifier les prévisions (par ex. le journal pour un présentateur météo).
+
+### Agenda
+- `CreationReserveeAuxEntreprises` : `true` pour que seuls les membres d'une entreprise puissent créer un événement.
+- `RappelMinutes` : délai du rappel avant le début (15 par défaut).
+- Dates acceptées : `25/10 21:30`, `25/10/2027 21h`, ou juste `21:30` / `21h` (aujourd'hui, ou demain si l'heure est passée).
+
 ## Modération
 
-- Les admins peuvent supprimer n'importe quel post N et gérer toutes les offres Pôle Travail (*Espace recruteur → Mes offres*).
+- Les admins peuvent supprimer n'importe quel post N, annonce LeBonNeo, article ou événement, et gérer toutes les offres Pôle Travail (*Espace recruteur → Mes offres*). Ils ont aussi accès aux menus Police, Journal, Météo et Capital Motors.
 - Les textes tapés par les joueurs sont nettoyés : impossible d'y glisser des balises de couleur / taille. Personne ne peut faire un `@everyone` sur Discord depuis le jeu.
 - Toutes les données sont des fichiers JSON lisibles dans `Plugins/NovaApps/`. Fais-en une copie de sauvegarde de temps en temps.

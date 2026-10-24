@@ -38,6 +38,9 @@ namespace NovaApps.Apps
 
         private readonly PoleTravailApp poleTravail;
         private readonly CapitalMotorsApp capitalMotors;
+        private readonly LeBonNeoApp leBonNeo;
+        private readonly JournalApp journal;
+        private readonly PoliceApp police;
         private readonly List<string> historique = new List<string>();
 
         private BlueLightfoxConfig Config => NovaAppsPlugin.Config.BlueLightfox;
@@ -50,10 +53,13 @@ namespace NovaApps.Apps
             http.DefaultRequestHeaders.UserAgent.ParseAdd("NovaApps-BlueLightfox/1.0 (serveur Nova-Life)");
         }
 
-        public BlueLightfoxApp(PoleTravailApp poleTravail, CapitalMotorsApp capitalMotors)
+        public BlueLightfoxApp(PoleTravailApp poleTravail, CapitalMotorsApp capitalMotors, LeBonNeoApp leBonNeo, JournalApp journal, PoliceApp police)
         {
             this.poleTravail = poleTravail;
             this.capitalMotors = capitalMotors;
+            this.leBonNeo = leBonNeo;
+            this.journal = journal;
+            this.police = police;
         }
 
         public void Ouvrir(Player joueur, Action retour)
@@ -64,6 +70,9 @@ namespace NovaApps.Apps
                 new Ligne(Google ? "Rechercher sur Google" : "Rechercher sur le web", () => DemanderRecherche(joueur, accueil)),
                 new Ligne("pole-travail.nl  —  offres d'emploi", () => poleTravail.Ouvrir(joueur, accueil, true)),
                 new Ligne("capital-motors.nl  —  catalogue de véhicules", () => capitalMotors.Catalogue(joueur, accueil)),
+                new Ligne("lebonneo.nl  —  petites annonces", () => leBonNeo.Ouvrir(joueur, accueil)),
+                new Ligne($"{SiteJournal}  —  {NovaAppsPlugin.Config.Journal.Nom}", () => journal.Ouvrir(joueur, accueil, true)),
+                new Ligne("police.nl  —  plaintes, amendes, avis de recherche", () => police.Ouvrir(joueur, accueil, true)),
             }.Concat(Config.Sites.Select(s => new Ligne($"{s.Adresse}  —  {s.Nom}", () => OuvrirSite(joueur, s, accueil)))), retour);
         }
 
@@ -153,6 +162,15 @@ namespace NovaApps.Apps
             if (Contient("voiture", "véhicule", "vehicule", "concession", "capital", "auto"))
                 sites.Add(new ResultatWeb { Titre = $"{NovaAppsPlugin.Config.CapitalMotors.Nom} - Catalogue", Lien = "https://capital-motors.nl", Ouvrir = (j, r) => capitalMotors.Catalogue(j, r) });
 
+            if (Contient("annonce", "vendre", "achat", "acheter", "occasion", "lebonneo", "leboncoin"))
+                sites.Add(new ResultatWeb { Titre = "LeBonNeo - Petites annonces", Lien = "https://lebonneo.nl", Ouvrir = (j, r) => leBonNeo.Ouvrir(j, r) });
+
+            if (Contient("journal", "actu", "info", "news", NovaAppsPlugin.Config.Journal.Nom))
+                sites.Add(new ResultatWeb { Titre = NovaAppsPlugin.Config.Journal.Nom, Lien = "https://" + SiteJournal, Ouvrir = (j, r) => journal.Ouvrir(j, r, true) });
+
+            if (Contient("police", "plainte", "amende", "recherché", "recherche police", "gendarmerie"))
+                sites.Add(new ResultatWeb { Titre = $"{NovaAppsPlugin.Config.Police.Nom} - Services en ligne", Lien = "https://police.nl", Ouvrir = (j, r) => police.Ouvrir(j, r, true) });
+
             foreach (SiteInterne site in Config.Sites.Where(s => s.MotsCles.Any(m => Contient(m))))
                 sites.Add(new ResultatWeb { Titre = site.Nom, Lien = "https://" + site.Adresse, Ouvrir = (j, r) => OuvrirSite(j, site, r) });
 
@@ -204,6 +222,8 @@ namespace NovaApps.Apps
             Match m = Regex.Match(lien ?? "", @"^https?://fr\.wikipedia\.org/wiki/([^#?]+)");
             return m.Success ? Uri.UnescapeDataString(m.Groups[1].Value).Replace('_', ' ') : null;
         }
+
+        private static string SiteJournal => Regex.Replace(NovaAppsPlugin.Config.Journal.Nom.ToLowerInvariant(), @"[^a-z0-9]+", "-").Trim('-') + ".nl";
 
         private static string Domaine(string lien)
         {

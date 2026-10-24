@@ -59,6 +59,15 @@ namespace NovaApps.Core
     /// </summary>
     public static class Ecran
     {
+        public static readonly System.Globalization.CultureInfo Francais = CultureFrancaise();
+
+        private static System.Globalization.CultureInfo CultureFrancaise()
+        {
+            // Certains serveurs n'embarquent pas les données de langue : on retombe alors sur l'anglais.
+            try { return new System.Globalization.CultureInfo("fr-FR"); }
+            catch { return System.Globalization.CultureInfo.InvariantCulture; }
+        }
+
         /// <summary>Liste de lignes cliquables (menu d'appli, fil d'actu, liste d'offres...).</summary>
         public static void Liste(Player joueur, string titre, IEnumerable<Ligne> lignes, Action retour, string vide = "Rien pour le moment.")
         {
@@ -162,6 +171,25 @@ namespace NovaApps.Core
             // "Retour" revient à la question précédente, ou quitte le formulaire à la première.
             index == 0 ? retour : () => Etape(joueur, titre, champs, index - 1, reponses, fin, retour),
             champ.Max, champ.Optionnel || champ.ParDefaut != null);
+        }
+
+        /// <summary>Choix parmi une liste de textes (catégorie, rubrique, genre...).</summary>
+        public static void Choix(Player joueur, string titre, IEnumerable<string> options, Action<string> choisi, Action retour)
+        {
+            Liste(joueur, titre, options.Select(o => new Ligne(o, () => choisi(o))), retour);
+        }
+
+        /// <summary>Choix d'un joueur connecté (autre que soi), trié par nom.</summary>
+        public static void ChoisirJoueur(Player joueur, string titre, Action<Player> choisi, Action retour)
+        {
+            Liste(joueur, titre,
+                Joueurs.TousEnLigne().Where(p => p != joueur).OrderBy(p => p.GetFullName())
+                    .Select(p => new Ligne(Joueurs.Nom(p), () =>
+                    {
+                        if (p.character != null) choisi(p);
+                        else retour();
+                    })),
+                retour, "Personne d'autre n'est en ville.");
         }
 
         /// <summary>Demande "Oui / Non" avant une action importante.</summary>

@@ -83,7 +83,7 @@ namespace NovaApps.Apps
 
         public bool EstVendeur(Player joueur)
         {
-            return joueur.IsAdmin || (joueur.HasBiz() && Config.EntreprisesConcession.Contains(joueur.biz.Id));
+            return Joueurs.Membre(joueur, Config.EntreprisesConcession);
         }
 
         public void Ouvrir(Player joueur, Action retour)

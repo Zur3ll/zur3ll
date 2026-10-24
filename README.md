@@ -57,8 +57,8 @@ Le bot doit rester allumé pour que les boutons fonctionnent.
 ## 📱 Plugin en jeu : téléphone & ordinateur
 
 Le dossier [`plugin-novalife`](plugin-novalife/README.md) contient un plugin serveur Nova-Life qui ajoute au jeu :
-- **Téléphone** : N (réseau social), Neonous (rencontres), Pôle Travail, Capital Motors (commande de véhicule).
-- **Ordinateur** : Discord (relié à ce serveur Discord), Blue Lightfox (vraies recherches web), Pôle Travail.
+- **Téléphone** : N (réseau social), Neonous (rencontres), LeBonNeo (petites annonces), Pôle Travail, Capital Motors (commande de véhicule), Journal RP, Police, Météo, Agenda.
+- **Ordinateur** : Discord (relié à ce serveur Discord), Blue Lightfox (vraies recherches web), Pôle Travail, LeBonNeo, Journal (rédaction), Police (intranet des agents).
 
 Les commandes et rendez-vous passés depuis l'appli Capital Motors arrivent dans le **salon de réception de ce bot**, avec le même bouton « 🎫 Je me charge du ticket ». Il suffit de mettre le même token et l'ID du salon de réception dans la config du plugin.
 

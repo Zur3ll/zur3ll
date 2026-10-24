@@ -13,8 +13,8 @@ using UnityEngine;
 namespace NovaApps
 {
     /// <summary>
-    /// Point d'entrée du plugin : téléphone (N, Neonous, Pôle Travail, Capital Motors)
-    /// et ordinateur (Discord, Blue Lightfox, Pôle Travail).
+    /// Point d'entrée du plugin : téléphone (N, Neonous, LeBonNeo, Pôle Travail, Capital Motors, Journal, Police, Météo, Agenda)
+    /// et ordinateur (Discord, Blue Lightfox, Pôle Travail, LeBonNeo, Journal, Police).
     /// </summary>
     public class NovaAppsPlugin : Plugin
     {
@@ -32,6 +32,11 @@ namespace NovaApps
         private CapitalMotorsApp capitalMotors;
         private DiscordApp discordApp;
         private BlueLightfoxApp blueLightfox;
+        private LeBonNeoApp leBonNeo;
+        private PoliceApp police;
+        private JournalApp journal;
+        private MeteoApp meteo;
+        private AgendaApp agenda;
 
         public NovaAppsPlugin(IGameAPI api) : base(api)
         {
@@ -52,8 +57,14 @@ namespace NovaApps
             poleTravail = new PoleTravailApp();
             capitalMotors = new CapitalMotorsApp(SauvegarderConfig);
             discordApp = new DiscordApp();
-            blueLightfox = new BlueLightfoxApp(poleTravail, capitalMotors);
+            leBonNeo = new LeBonNeoApp();
+            police = new PoliceApp();
+            journal = new JournalApp();
+            meteo = new MeteoApp();
+            agenda = new AgendaApp();
+            blueLightfox = new BlueLightfoxApp(poleTravail, capitalMotors, leBonNeo, journal, police);
 
+            Nova.server.OnMinutePassedEvent += ChaqueMinute;
             EnregistrerCommandes();
             Debug.Log("[NovaApps] Téléphone et ordinateur prêts.");
         }
@@ -68,6 +79,19 @@ namespace NovaApps
                 OuvrirTelephone(player);
             else if (keyCode == toucheOrdinateur)
                 OuvrirOrdinateur(player);
+        }
+
+        private void ChaqueMinute()
+        {
+            try
+            {
+                meteo.Tick();
+                agenda.Tick();
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"[NovaApps] Erreur de la tâche minute : {e}");
+            }
         }
 
         private void EnregistrerCommandes()
@@ -115,8 +139,13 @@ namespace NovaApps
             {
                 new Ligne("N  —  le réseau social", () => n.Ouvrir(joueur, accueil)),
                 new Ligne("Neonous  —  rencontres", () => neonous.Ouvrir(joueur, accueil)),
+                new Ligne("LeBonNeo  —  petites annonces", () => leBonNeo.Ouvrir(joueur, accueil)),
                 new Ligne("Pôle Travail  —  emploi", () => poleTravail.Ouvrir(joueur, accueil, false)),
                 new Ligne($"{Config.CapitalMotors.Nom}  —  concession", () => capitalMotors.Ouvrir(joueur, accueil)),
+                new Ligne($"{Config.Journal.Nom}  —  journal", () => journal.Ouvrir(joueur, accueil, false)),
+                new Ligne($"{Config.Police.Nom}  —  17, plaintes, amendes", () => police.Ouvrir(joueur, accueil, false)),
+                new Ligne($"Météo  —  {meteo.Resume()}", () => meteo.Ouvrir(joueur, accueil)),
+                new Ligne("Agenda" + (agenda.NombreAujourdhui > 0 ? $"  —  {agenda.NombreAujourdhui} événement(s) aujourd'hui" : "  —  événements"), () => agenda.Ouvrir(joueur, accueil)),
             }, null);
         }
 
@@ -140,6 +169,9 @@ namespace NovaApps
                 new Ligne("Discord", () => discordApp.Ouvrir(joueur, bureau)),
                 new Ligne("Blue Lightfox  —  navigateur web", () => blueLightfox.Ouvrir(joueur, bureau)),
                 new Ligne("Pôle Travail", () => poleTravail.Ouvrir(joueur, bureau, true)),
+                new Ligne("LeBonNeo", () => leBonNeo.Ouvrir(joueur, bureau)),
+                new Ligne(journal.EstJournaliste(joueur) ? $"{Config.Journal.Nom}  —  rédaction" : Config.Journal.Nom, () => journal.Ouvrir(joueur, bureau, true)),
+                new Ligne(police.EstAgent(joueur) ? $"{Config.Police.Nom}  —  intranet" : Config.Police.Nom, () => police.Ouvrir(joueur, bureau, true)),
             }, null);
         }
 

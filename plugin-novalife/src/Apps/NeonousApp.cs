@@ -94,8 +94,8 @@ namespace NovaApps.Apps
                     return;
                 }
 
-                Choix(joueur, "Tu es :", Genres, genre =>
-                    Choix(joueur, "Tu cherches :", new[] { "Homme", "Femme", ToutLeMonde }, recherche =>
+                Ecran.Choix(joueur, "Neonous · Tu es :", Genres, genre =>
+                    Ecran.Choix(joueur, "Neonous · Tu cherches :", new[] { "Homme", "Femme", ToutLeMonde }, recherche =>
                     {
                         int id = Joueurs.Id(joueur);
                         D.Profils.TryGetValue(id, out NeonousProfil ancien);
@@ -117,11 +117,6 @@ namespace NovaApps.Apps
                         suite();
                     }, retour), retour);
             }, retour);
-        }
-
-        private void Choix(Player joueur, string question, IEnumerable<string> options, Action<string> choisi, Action retour)
-        {
-            Ecran.Liste(joueur, "Neonous · " + question, options.Select(o => new Ligne(o, () => choisi(o))), retour);
         }
 
         private static bool Compatible(NeonousProfil moi, NeonousProfil autre)
