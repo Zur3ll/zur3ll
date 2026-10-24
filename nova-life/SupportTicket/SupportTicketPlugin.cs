@@ -48,10 +48,9 @@ namespace SupportTicket
             if (!Enum.TryParse(config.ToucheJoueur, true, out toucheJoueur))
                 toucheJoueur = KeyCode.N;
             if (!Enum.TryParse(config.ToucheStaff, true, out toucheStaff))
-                toucheStaff = KeyCode.None;
+                toucheStaff = KeyCode.Comma;
 
             new SChatCommand("/ticket", "Ouvrir un ticket support", "/ticket", (player, args) => OuvrirMenuJoueur(player)).Register();
-            new SChatCommand("/tickets", "Liste des tickets (staff)", "/tickets", (player, args) => OuvrirListeStaff(player)).Register();
             new SChatCommand("/ticketicones", "Aperçu des icônes (staff)", "/ticketicones [page]", (player, args) =>
             {
                 int page = 1;
@@ -174,7 +173,7 @@ namespace SupportTicket
 
             foreach (Player staff in Nova.server.Players.Where(EstStaffDisponible).ToList())
             {
-                staff.SendText($"<color={config.CouleurTitre}>[Support]</color> Nouveau ticket de <b>{NomRP(player)}</b> — {categorie.Titre} : {message}\n/tickets pour voir la liste");
+                staff.SendText($"<color={config.CouleurTitre}>[Support]</color> Nouveau ticket de <b>{NomRP(player)}</b> — {categorie.Titre} : {message}\nTouche {config.ToucheStaff} pour voir la liste");
                 staff.setup.TargetPlayClairon(0.2f);
             }
         }
