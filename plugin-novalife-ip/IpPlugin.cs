@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using Life;
 using Life.Network;
@@ -81,7 +82,7 @@ namespace IpPlugin
         {
             try
             {
-                return p.GetFullName();
+                return p.FullName;
             }
             catch (Exception)
             {
@@ -106,7 +107,18 @@ namespace IpPlugin
         {
             try
             {
-                string ip = p.conn?.address;
+                // Selon la version de Mirror, "address" n'existe que sur le type réel
+                // de la connexion (NetworkConnectionToClient) : on le lit par réflexion.
+                object conn = p.conn;
+                if (conn == null)
+                    return "inconnue";
+
+                Type type = conn.GetType();
+                object valeur =
+                    type.GetProperty("address", BindingFlags.Public | BindingFlags.Instance)?.GetValue(conn) ??
+                    type.GetField("address", BindingFlags.Public | BindingFlags.Instance)?.GetValue(conn);
+
+                string ip = valeur as string;
                 return string.IsNullOrEmpty(ip) ? "inconnue" : ip;
             }
             catch (Exception)
