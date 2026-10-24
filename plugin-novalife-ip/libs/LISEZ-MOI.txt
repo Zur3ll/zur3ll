@@ -1,0 +1,1 @@
+Copie ici Assembly-CSharp.dll, Mirror.dll, UnityEngine.dll et UnityEngine.CoreModule.dll (dossier ..._Data\Managed de ton serveur).

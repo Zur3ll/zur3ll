@@ -3,3 +3,4 @@ node_modules/
 bin/
 obj/
 *.zip
+plugin-novalife-ip/libs/*.dll

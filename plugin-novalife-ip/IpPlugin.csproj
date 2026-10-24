@@ -5,8 +5,8 @@
     <AssemblyName>IpPlugin</AssemblyName>
     <RootNamespace>IpPlugin</RootNamespace>
     <LangVersion>latest</LangVersion>
-    <!-- Chemin vers le dossier Managed du serveur Nova-Life (à adapter) -->
-    <NovaLifeManaged Condition="'$(NovaLifeManaged)' == ''">C:\NovaLifeServer\NovaLife_Data\Managed</NovaLifeManaged>
+    <!-- Dossier contenant les DLL du serveur Nova-Life : par défaut le dossier "libs" à côté de ce fichier -->
+    <NovaLifeManaged Condition="'$(NovaLifeManaged)' == ''">$(MSBuildProjectDirectory)\libs</NovaLifeManaged>
   </PropertyGroup>
 
   <ItemGroup>

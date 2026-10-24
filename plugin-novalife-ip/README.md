@@ -14,12 +14,17 @@ Marie Durand | IP : 85.12.34.56 | ID : (4:7) | Distance : 27.9 m
 
 Prérequis : [.NET SDK](https://dotnet.microsoft.com/download) (6 ou plus) et les fichiers du serveur Nova-Life.
 
-1. Ouvre `IpPlugin.csproj` et remplace le chemin `NovaLifeManaged` par le dossier `..._Data\Managed` de **ton** serveur (celui qui contient `Assembly-CSharp.dll`).
-2. Dans un terminal, dans ce dossier :
+1. Sur ton serveur Nova-Life, cherche le fichier `Assembly-CSharp.dll` (il est dans un dossier `..._Data\Managed`). Si ton serveur est chez un hébergeur, télécharge ce dossier via le FTP / gestionnaire de fichiers.
+2. Crée un dossier `libs` à côté de `IpPlugin.csproj` et copies-y ces 4 fichiers :
+   - `Assembly-CSharp.dll`
+   - `Mirror.dll`
+   - `UnityEngine.dll`
+   - `UnityEngine.CoreModule.dll`
+3. Dans un terminal, dans ce dossier :
    ```bash
    dotnet build -c Release
    ```
-3. Le fichier `bin/Release/net48/IpPlugin.dll` est créé.
+4. Le fichier `bin/Release/net48/IpPlugin.dll` est créé.
 
 ## Installer
 
