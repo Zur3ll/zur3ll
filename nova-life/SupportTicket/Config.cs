@@ -8,7 +8,7 @@ namespace SupportTicket
     {
         public string Titre;
         public string Description;
-        // Index de l'icône dans Nova.man.icons (utiliser /ticketicones en jeu pour trouver le bon numéro)
+        // Numéro de l'icône du jeu (utiliser /ticketicones en jeu pour trouver le bon numéro)
         public int IconeId;
     }
 
