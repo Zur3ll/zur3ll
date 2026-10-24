@@ -4,8 +4,8 @@ Quand un **admin** tape `/ip` dans le tchat, il voit tous les joueurs dans un ra
 
 ```
 [IP] 2 joueur(s) dans un rayon de 50 m :
-Jean Dupont | IP : 192.168.1.20 | ID : 42 | Distance : 3.4 m
-Marie Durand | IP : 85.12.34.56 | ID : 17 | Distance : 27.9 m
+Jean Dupont | IP : 192.168.1.20 | ID : (1:3) | Distance : 3.4 m
+Marie Durand | IP : 85.12.34.56 | ID : (4:7) | Distance : 27.9 m
 ```
 
 > 🔒 La commande est réservée aux administrateurs : les adresses IP sont des données personnelles, un joueur normal qui tape `/ip` reçoit un message de refus.
@@ -30,5 +30,5 @@ Prérequis : [.NET SDK](https://dotnet.microsoft.com/download) (6 ou plus) et le
 ## Personnaliser
 
 - **Rayon** : change `private const float Rayon = 50f;` dans `IpPlugin.cs`.
-- **ID affiché** : c'est l'ID du compte (`p.account.id`). Pour l'ID du personnage, remplace par `p.character.Id`.
+- **ID affiché** : même format que l'ID au-dessus de la tête des joueurs, `(ID du compte:ID du personnage)`, par ex. `(1:3)`. Modifiable dans la fonction `IdDuJoueur`.
 - **Ouvrir à tout le monde** : supprime le bloc `if (!player.IsAdmin) { ... }` (déconseillé).

@@ -70,7 +70,7 @@ namespace IpPlugin
                 message.AppendLine(
                     $"<color=#3498db>{NomDuJoueur(p)}</color>" +
                     $" | IP : <color=#2ecc71>{IpDuJoueur(p)}</color>" +
-                    $" | ID : <color=#9b59b6>{p.account.id}</color>" +
+                    $" | ID : <color=#9b59b6>({IdDuJoueur(p)})</color>" +
                     $" | Distance : <color=#e67e22>{x.Distance:0.0} m</color>");
             }
 
@@ -86,6 +86,19 @@ namespace IpPlugin
             catch (Exception)
             {
                 return p.account?.username ?? "Inconnu";
+            }
+        }
+
+        // Même format que l'ID affiché au-dessus de la tête : (compte:personnage), ex. (1:3)
+        private static string IdDuJoueur(Player p)
+        {
+            try
+            {
+                return $"{p.account.id}:{p.character.Id}";
+            }
+            catch (Exception)
+            {
+                return "?";
             }
         }
 
