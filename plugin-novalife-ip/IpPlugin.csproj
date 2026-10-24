@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <AssemblyName>IpPlugin</AssemblyName>
+    <RootNamespace>IpPlugin</RootNamespace>
+    <LangVersion>latest</LangVersion>
+    <!-- Chemin vers le dossier Managed du serveur Nova-Life (à adapter) -->
+    <NovaLifeManaged Condition="'$(NovaLifeManaged)' == ''">C:\NovaLifeServer\NovaLife_Data\Managed</NovaLifeManaged>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>$(NovaLifeManaged)\Assembly-CSharp.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Mirror">
+      <HintPath>$(NovaLifeManaged)\Mirror.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>$(NovaLifeManaged)\UnityEngine.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(NovaLifeManaged)\UnityEngine.CoreModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+</Project>
