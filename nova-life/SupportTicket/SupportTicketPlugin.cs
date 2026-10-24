@@ -282,12 +282,12 @@ namespace SupportTicket
             if (!player.IsAdmin)
                 return;
 
-            int total = Nova.man.icons.Length;
             int debut = (page - 1) * IconesParPage;
-            int fin = Math.Min(debut + IconesParPage, total);
+            int fin = debut + IconesParPage;
 
-            UIPanel panel = new UIPanel($"Icônes {debut}-{fin - 1} / {total - 1}", UIPanel.PanelType.TabPrice)
-                .AddButton(Bouton("SUIVANT", Vert), ui => OuvrirApercuIcones(player, fin < total ? page + 1 : 1))
+            UIPanel panel = new UIPanel($"Icônes {debut} à {fin - 1} (page {page})", UIPanel.PanelType.TabPrice)
+                .AddButton(Bouton("SUIVANT", Vert), ui => OuvrirApercuIcones(player, page + 1))
+                .AddButton(Bouton("PRÉCÉDENT", Gris), ui => OuvrirApercuIcones(player, Math.Max(1, page - 1)))
                 .AddButton(Bouton("FERMER", Rouge), ui => player.ClosePanel(ui));
 
             for (int i = debut; i < fin; i++)
