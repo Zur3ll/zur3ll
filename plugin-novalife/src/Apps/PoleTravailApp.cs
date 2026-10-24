@@ -78,6 +78,13 @@ namespace NovaApps.Apps
 
         public int NombreOffresOuvertes => D.Offres.Count(o => o.Ouverte);
 
+        /// <summary>Candidatures en attente sur les offres du joueur.</summary>
+        public int Badge(Player joueur)
+        {
+            int moi = Joueurs.Id(joueur);
+            return D.Candidatures.Count(c => c.Statut == StatutCandidature.EnAttente && D.Offres.Any(o => o.Id == c.OffreId && o.RecruteurId == moi));
+        }
+
         public void Ouvrir(Player joueur, Action retour, bool surOrdinateur)
         {
             int moi = Joueurs.Id(joueur);

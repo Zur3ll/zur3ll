@@ -22,6 +22,15 @@ Plugin serveur Nova-Life : Amboise qui ajoute des applications au **téléphone*
 - Ordinateur : touche **F8** ou commande **/ordi**
 - Les touches se changent dans `config.json`.
 - Par défaut l'ordinateur s'ouvre partout. Pour qu'il ne marche **que devant un vrai PC du jeu**, place-toi devant un ordinateur et tape **/ordi_ajouter** (admin). **/ordi_retirer** supprime le plus proche.
+- **/ordi_ajouter 5** réserve ce PC aux membres de l'entreprise 5 : par exemple les PC du commissariat pour la police, ceux de la rédaction pour le journal. Les autres joueurs voient « Session verrouillée : mot de passe requis ».
+
+### Réalisme
+
+- **Écran de verrouillage** : à l'ouverture, le téléphone affiche l'heure, la date, la météo et les **notifications en attente** de chaque appli (mentions N, messages Neonous / LeBonNeo, candidatures, amendes, appels 17 pour les agents, nouveaux articles, événements du jour). On le **déverrouille** pour arriver sur l'écran d'accueil.
+- **Écran d'accueil** : barre de statut (heure, réseau, batterie) et **pastilles** `(3)` à côté de chaque appli qui a du nouveau.
+- **Il faut un téléphone sur soi** : mets l'ID de l'objet téléphone de ton serveur dans `ObjetsTelephone`. Pour le trouver, garde ton téléphone sur toi et tape **/tel_objets** (admin) : la liste des objets de ton inventaire s'affiche avec leurs ID. Si l'inventaire ne peut pas être lu sur ta version du jeu, la vérification est désactivée (personne n'est bloqué) et un message apparaît dans la console.
+- **En prison**, le téléphone est confisqué (`TelephoneConfisqueEnPrison`).
+- **À terre** (0 % de vie), impossible d'utiliser le téléphone ou l'ordinateur (`BloquerSiAterre`).
 
 > ⚠️ **Ce qu'un plugin peut faire et ne peut pas faire.**
 > Les plugins Nova-Life tournent sur le serveur. Ils ne peuvent pas modifier l'écran du téléphone d'origine du jeu, ni afficher une vraie page web.

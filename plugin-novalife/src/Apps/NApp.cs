@@ -17,6 +17,8 @@ namespace NovaApps.Apps
         /// <summary>Pseudo (@...) de chaque personnage, par ID de personnage.</summary>
         public Dictionary<int, string> Pseudos = new Dictionary<int, string>();
         public List<NPost> Posts = new List<NPost>();
+        /// <summary>Dernière consultation des mentions, par ID de personnage (pastille du téléphone).</summary>
+        public Dictionary<int, DateTime> MentionsVues = new Dictionary<int, DateTime>();
     }
 
     public class NPost
@@ -42,6 +44,14 @@ namespace NovaApps.Apps
         private NDonnees D => stockage.Donnees;
         private NConfig Config => NovaAppsPlugin.Config.N;
 
+        /// <summary>Nombre de mentions / réponses pas encore vues.</summary>
+        public int Badge(Player joueur)
+        {
+            if (!D.Pseudos.ContainsKey(Joueurs.Id(joueur))) return 0;
+            DateTime vues = D.MentionsVues.TryGetValue(Joueurs.Id(joueur), out DateTime d) ? d : DateTime.MinValue;
+            return MesMentions(joueur).Count(p => p.Date > vues);
+        }
+
         public void Ouvrir(Player joueur, Action retour)
         {
             if (!D.Pseudos.ContainsKey(Joueurs.Id(joueur)))
@@ -56,7 +66,12 @@ namespace NovaApps.Apps
                 new Ligne("Fil d'actualité", () => Fil(joueur, menu)),
                 new Ligne("Publier", () => Publier(joueur, 0, menu)),
                 new Ligne("Tendances", () => Tendances(joueur, menu)),
-                new Ligne("Mes mentions", () => ListePosts(joueur, "Mentions", MesMentions(joueur), menu)),
+                new Ligne("Mes mentions" + (Badge(joueur) > 0 ? $"  ({Badge(joueur)})" : ""), () =>
+                {
+                    D.MentionsVues[Joueurs.Id(joueur)] = DateTime.Now;
+                    stockage.Sauvegarder();
+                    ListePosts(joueur, "Mentions", MesMentions(joueur), menu);
+                }),
                 new Ligne("Mon profil", () => Profil(joueur, Joueurs.Id(joueur), menu)),
                 new Ligne("Rechercher un compte", () => RechercherCompte(joueur, menu)),
             }, retour);

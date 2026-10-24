@@ -47,6 +47,13 @@ namespace NovaApps.Apps
 
         public int NombreAujourdhui => AVenir.Count(e => e.Date.Date == DateTime.Today);
 
+        /// <summary>Événements du jour auxquels le joueur participe ou qu'il organise.</summary>
+        public int Badge(Player joueur)
+        {
+            int moi = Joueurs.Id(joueur);
+            return AVenir.Count(e => e.Date.Date == DateTime.Today && (e.Participants.Contains(moi) || e.OrganisateurId == moi));
+        }
+
         public void Ouvrir(Player joueur, Action retour)
         {
             int moi = Joueurs.Id(joueur);

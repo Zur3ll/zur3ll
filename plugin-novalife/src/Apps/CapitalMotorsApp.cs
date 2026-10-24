@@ -86,6 +86,12 @@ namespace NovaApps.Apps
             return Joueurs.Membre(joueur, Config.EntreprisesConcession);
         }
 
+        /// <summary>Commandes et rendez-vous à traiter, pour les vendeurs.</summary>
+        public int Badge(Player joueur)
+        {
+            return EstVendeur(joueur) ? D.Commandes.Count(c => c.Statut == StatutCommande.EnAttente) + D.RendezVous.Count(r => !r.Traite) : 0;
+        }
+
         public void Ouvrir(Player joueur, Action retour)
         {
             Action menu = () => Ouvrir(joueur, retour);

@@ -35,6 +35,8 @@ namespace NovaApps.Apps
         public int B;
         public DateTime Date;
         public List<NeonousMessage> Messages = new List<NeonousMessage>();
+        /// <summary>Personnages qui ont du nouveau (match ou message) pas encore vu.</summary>
+        public HashSet<int> NonLu = new HashSet<int>();
 
         public bool Concerne(int id) => A == id || B == id;
         public int Autre(int id) => A == id ? B : A;
@@ -57,6 +59,13 @@ namespace NovaApps.Apps
         private readonly Stockage<NeonousDonnees> stockage = new Stockage<NeonousDonnees>(Path.Combine(NovaAppsPlugin.Dossier, "neonous.json"));
         private NeonousDonnees D => stockage.Donnees;
 
+        /// <summary>Nouveaux matchs et conversations non lues.</summary>
+        public int Badge(Player joueur)
+        {
+            int moi = Joueurs.Id(joueur);
+            return D.Matchs.Count(m => m.Concerne(moi) && m.NonLu.Contains(moi));
+        }
+
         public void Ouvrir(Player joueur, Action retour)
         {
             if (!D.Profils.TryGetValue(Joueurs.Id(joueur), out NeonousProfil profil))
@@ -68,12 +77,12 @@ namespace NovaApps.Apps
             }
 
             Action menu = () => Ouvrir(joueur, retour);
-            int nonLus = D.Matchs.Count(m => m.Concerne(profil.PersonnageId) && m.Messages.Count > 0 && m.Messages.Last().AuteurId != profil.PersonnageId);
+            int nonLus = Badge(joueur);
 
             Ecran.Liste(joueur, "Neonous", new[]
             {
                 new Ligne("Découvrir des profils", () => Decouvrir(joueur, menu)),
-                new Ligne($"Mes matchs ({D.Matchs.Count(m => m.Concerne(profil.PersonnageId))})" + (nonLus > 0 ? $"  ·  {nonLus} conversation(s) en attente" : ""), () => Matchs(joueur, menu)),
+                new Ligne($"Mes matchs ({D.Matchs.Count(m => m.Concerne(profil.PersonnageId))})" + (nonLus > 0 ? $"  ·  {nonLus} non lu(s)" : ""), () => Matchs(joueur, menu)),
                 new Ligne("Mon profil", () => MonProfil(joueur, menu)),
             }, retour);
         }
@@ -175,6 +184,7 @@ namespace NovaApps.Apps
         private void NouveauMatch(Player joueur, NeonousProfil moi, NeonousProfil autre, Action retour)
         {
             NeonousMatch match = new NeonousMatch { A = moi.PersonnageId, B = autre.PersonnageId, Date = DateTime.Now };
+            match.NonLu.Add(autre.PersonnageId);
             D.Matchs.Add(match);
             stockage.Sauvegarder();
 
@@ -210,6 +220,9 @@ namespace NovaApps.Apps
             string nom = D.Profils.TryGetValue(match.Autre(moi), out NeonousProfil autre) ? autre.Prenom : "Profil supprimé";
             Action relire = () => Conversation(joueur, match, retour);
 
+            if (match.NonLu.Remove(moi))
+                stockage.Sauvegarder();
+
             string fil = match.Messages.Count == 0
                 ? "<i>Aucun message. Lance la conversation !</i>"
                 : string.Join("\n", match.Messages.Skip(Math.Max(0, match.Messages.Count - 15)).Select(m =>
@@ -235,6 +248,7 @@ namespace NovaApps.Apps
             {
                 int moi = Joueurs.Id(joueur);
                 match.Messages.Add(new NeonousMessage { AuteurId = moi, Texte = texte, Date = DateTime.Now });
+                match.NonLu.Add(match.Autre(moi));
                 stockage.Sauvegarder();
 
                 string prenom = D.Profils.TryGetValue(moi, out NeonousProfil p) ? p.Prenom : Joueurs.Nom(joueur);

@@ -61,6 +61,13 @@ namespace NovaApps.Apps
 
         private IEnumerable<Annonce> EnLigne => D.Annonces.Where(a => !a.Vendue && a.Remontee > DateTime.Now.AddDays(-Config.DureeJours));
 
+        /// <summary>Conversations avec un message non lu.</summary>
+        public int Badge(Player joueur)
+        {
+            int moi = Joueurs.Id(joueur);
+            return D.Conversations.Count(c => c.Concerne(moi) && c.Messages.Count > 0 && c.NonLu(moi));
+        }
+
         public void Ouvrir(Player joueur, Action retour)
         {
             int moi = Joueurs.Id(joueur);

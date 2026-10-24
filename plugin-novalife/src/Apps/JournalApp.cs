@@ -15,6 +15,8 @@ namespace NovaApps.Apps
     {
         public int ProchainId = 1;
         public List<Article> Articles = new List<Article>();
+        /// <summary>Dernière ouverture du journal, par ID de personnage (pastille du téléphone).</summary>
+        public Dictionary<int, DateTime> DerniereVisite = new Dictionary<int, DateTime>();
     }
 
     public class Article
@@ -47,8 +49,18 @@ namespace NovaApps.Apps
 
         public bool EstJournaliste(Player joueur) => Joueurs.Membre(joueur, Config.EntreprisesJournal);
 
+        /// <summary>Articles publiés depuis la dernière visite (ou depuis 24 h pour un nouveau lecteur).</summary>
+        public int Badge(Player joueur)
+        {
+            DateTime depuis = D.DerniereVisite.TryGetValue(Joueurs.Id(joueur), out DateTime d) ? d : DateTime.Now.AddDays(-1);
+            return D.Articles.Count(a => a.Date > depuis);
+        }
+
         public void Ouvrir(Player joueur, Action retour, bool surOrdinateur)
         {
+            D.DerniereVisite[Joueurs.Id(joueur)] = DateTime.Now;
+            stockage.Sauvegarder();
+
             Action menu = () => Ouvrir(joueur, retour, surOrdinateur);
             Article une = D.Articles.OrderByDescending(a => a.Date).FirstOrDefault();
 

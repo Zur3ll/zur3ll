@@ -14,8 +14,21 @@ namespace NovaApps
         public string ToucheOrdinateur = "F8";
 
         /// <summary>
+        /// ID des objets "téléphone" du jeu : il faut en porter un pour utiliser les applis.
+        /// Vide = pas besoin d'objet. Pour trouver l'ID, garde ton téléphone sur toi et tape /tel_objets (admin).
+        /// </summary>
+        public List<int> ObjetsTelephone = new List<int>();
+
+        /// <summary>En prison, le téléphone est confisqué.</summary>
+        public bool TelephoneConfisqueEnPrison = true;
+
+        /// <summary>Un joueur à terre (0 % de vie) ne peut utiliser ni téléphone ni ordinateur.</summary>
+        public bool BloquerSiAterre = true;
+
+        /// <summary>
         /// Emplacements des ordinateurs. Si la liste est vide, l'ordinateur s'ouvre partout.
         /// Ajoute-les en jeu avec /ordi_ajouter (admin) en te plaçant devant un PC.
+        /// /ordi_ajouter 5 réserve le PC aux membres de l'entreprise 5 (ex. le commissariat).
         /// </summary>
         public List<Position> Ordinateurs = new List<Position>();
         public float DistanceOrdinateur = 2.5f;
@@ -37,6 +50,9 @@ namespace NovaApps
         public float X;
         public float Y;
         public float Z;
+
+        /// <summary>Entreprises autorisées à utiliser ce PC. Vide = PC public.</summary>
+        public List<int> Entreprises = new List<int>();
     }
 
     public class DiscordConfig

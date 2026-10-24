@@ -112,6 +112,13 @@ namespace NovaApps.Apps
 
         public IEnumerable<AvisDeRecherche> AvisActifs => D.Avis.Where(a => a.Actif);
 
+        /// <summary>Amendes à payer, plus les appels 17 en attente pour les agents.</summary>
+        public int Badge(Player joueur)
+        {
+            int moi = Joueurs.Id(joueur);
+            return D.Amendes.Count(a => a.PersonnageId == moi && !a.Payee) + (EstAgent(joueur) ? D.Appels.Count(a => a.PrisPar == null) : 0);
+        }
+
         public void Ouvrir(Player joueur, Action retour, bool surOrdinateur)
         {
             int moi = Joueurs.Id(joueur);
