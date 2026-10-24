@@ -251,7 +251,7 @@ namespace NovaApps.Apps
 
         private void PublierOffre(Player joueur, Action retour)
         {
-            string entreprise = joueur.HasBiz() ? joueur.biz.BizName : null;
+            string entreprise = joueur.HasBiz ? joueur.biz.BizName : null;
             string telephone = joueur.character.PhoneNumber;
 
             Ecran.Formulaire(joueur, "Pôle Travail · Nouvelle offre", new List<Champ>

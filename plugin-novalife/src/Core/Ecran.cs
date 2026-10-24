@@ -183,7 +183,7 @@ namespace NovaApps.Core
         public static void ChoisirJoueur(Player joueur, string titre, Action<Player> choisi, Action retour)
         {
             Liste(joueur, titre,
-                Joueurs.TousEnLigne().Where(p => p != joueur).OrderBy(p => p.GetFullName())
+                Joueurs.TousEnLigne().Where(p => p != joueur).OrderBy(p => p.FullName)
                     .Select(p => new Ligne(Joueurs.Nom(p), () =>
                     {
                         if (p.character != null) choisi(p);

@@ -128,13 +128,13 @@ namespace NovaApps.Apps
 
         private void Creer(Player joueur, Action retour)
         {
-            if (Config.CreationReserveeAuxEntreprises && !joueur.IsAdmin && !joueur.HasBiz())
+            if (Config.CreationReserveeAuxEntreprises && !joueur.IsAdmin && !joueur.HasBiz)
             {
                 Ecran.Texte(joueur, "Agenda", "Seules les entreprises peuvent créer des événements.", retour);
                 return;
             }
 
-            string organisateur = joueur.HasBiz() ? joueur.biz.BizName : null;
+            string organisateur = joueur.HasBiz ? joueur.biz.BizName : null;
             Ecran.Formulaire(joueur, "Agenda · Nouvel événement", new List<Champ>
             {
                 new Champ("titre", "Nom de l'événement :", "Ex : Soirée d'ouverture du Neon Club", 60),

@@ -109,7 +109,7 @@ Prérequis : Nova-Life installé via Steam, et le [SDK .NET](https://dotnet.micr
 "Police": { "Nom": "Police Nationale", "EntreprisesPolice": [5], "AmendeMax": 10000, "FichierSurOrdinateurUniquement": true }
 ```
 - `EntreprisesPolice` : ID de l'entreprise de la police en jeu. Ses membres ont les menus **[Agent]**.
-- Les amendes se paient **en liquide** depuis l'appli : l'argent est retiré au joueur et l'agent est prévenu.
+- Les amendes se paient **par la banque** depuis l'appli (l'argent en poche du jeu passe par des porte-monnaie) : l'argent est retiré du compte du joueur et l'agent est prévenu.
 - `FichierSurOrdinateurUniquement` : le casier / les notes ne se consultent que sur un ordinateur du commissariat (pense à `/ordi_ajouter` devant les PC).
 
 ### Journal

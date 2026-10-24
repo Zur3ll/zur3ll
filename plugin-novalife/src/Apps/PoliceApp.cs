@@ -235,7 +235,7 @@ namespace NovaApps.Apps
                         Ecran.Texte(joueur, $"Police · Amende n°{a.Id}",
                             $"<b>Amende n°{a.Id}</b>  ·  {a.Date:dd/MM HH:mm}\n<b>Montant :</b> {a.Montant} €\n<b>Motif :</b> {a.Motif}\n<b>Agent :</b> {a.Agent}\n<b>État :</b> {(a.Payee ? "payée" : "à payer")}",
                             recharger,
-                            a.Payee ? null : new Bouton($"Payer {a.Montant} € (espèces)", () => Payer(joueur, a, recharger))))),
+                            a.Payee ? null : new Bouton($"Payer {a.Montant} € (banque)", () => Payer(joueur, a, recharger))))),
                 retour, "Aucune amende. Continue comme ça !");
         }
 
@@ -247,14 +247,15 @@ namespace NovaApps.Apps
                 return;
             }
 
-            if (joueur.character.Money < a.Montant)
+            // L'argent en poche est géré par des porte-monnaie (objets) : l'amende se paie par la banque.
+            if (joueur.Bank < a.Montant)
             {
-                joueur.Notify(Config.Nom, $"Il te faut {a.Montant} € en liquide pour payer cette amende.", NotificationManager.Type.Error);
+                joueur.Notify(Config.Nom, $"Il te faut {a.Montant} € sur ton compte en banque pour payer cette amende.", NotificationManager.Type.Error);
                 retour();
                 return;
             }
 
-            joueur.AddMoney(-a.Montant, "AMENDE_POLICE");
+            joueur.AddBankMoney(-a.Montant, "AMENDE_POLICE");
             a.Payee = true;
             stockage.Sauvegarder();
 

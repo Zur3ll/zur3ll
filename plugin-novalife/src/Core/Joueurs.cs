@@ -11,7 +11,7 @@ namespace NovaApps.Core
     {
         public static int Id(Player joueur) => joueur.character.Id;
 
-        public static string Nom(Player joueur) => Ecran.Nettoyer(joueur.GetFullName());
+        public static string Nom(Player joueur) => Ecran.Nettoyer(joueur.FullName);
 
         /// <summary>Joueur connecté qui joue ce personnage, ou null.</summary>
         public static Player EnLigne(int personnageId)
@@ -29,7 +29,7 @@ namespace NovaApps.Core
         /// <summary>Admin, ou membre d'une des entreprises listées (concession, police, journal...).</summary>
         public static bool Membre(Player joueur, ICollection<int> entreprises)
         {
-            return joueur.IsAdmin || (joueur.HasBiz() && entreprises.Contains(joueur.biz.Id));
+            return joueur.IsAdmin || (joueur.HasBiz && entreprises.Contains(joueur.biz.Id));
         }
 
         public static IEnumerable<Player> TousEnLigne()

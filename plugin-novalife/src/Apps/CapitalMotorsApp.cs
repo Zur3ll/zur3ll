@@ -2,13 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using Life;
 using Life.DB;
 using Life.Network;
 using Life.PermissionSystem;
 using Life.UI;
-using Life.VehicleSystem;
 using NovaApps.Core;
 using UnityEngine;
 
@@ -384,10 +384,21 @@ namespace NovaApps.Apps
         {
             for (int i = 0; i < Nova.v.vehicleModels.Length; i++)
             {
-                Vehicle modele = Nova.v.vehicleModels[i];
-                if (modele != null && !modele.isDeprecated)
-                    yield return new KeyValuePair<int, string>(i, modele.vehicleName);
+                object modele = Nova.v.vehicleModels[i];
+                if (modele != null && !(Membre(modele, "isDeprecated") is bool obsolete && obsolete))
+                    yield return new KeyValuePair<int, string>(i, Membre(modele, "vehicleName") as string ?? (modele as UnityEngine.Object)?.name ?? $"Modèle {i}");
             }
+        }
+
+        /// <summary>
+        /// Lit un champ ou une propriété d'un modèle de véhicule par son nom : la classe des modèles
+        /// change selon les versions du jeu, on évite donc d'en dépendre à la compilation.
+        /// </summary>
+        private static object Membre(object objet, string nom)
+        {
+            const BindingFlags drapeaux = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
+            System.Type type = objet.GetType();
+            return type.GetField(nom, drapeaux)?.GetValue(objet) ?? type.GetProperty(nom, drapeaux)?.GetValue(objet);
         }
 
         private void RemplirCatalogueParDefaut()
