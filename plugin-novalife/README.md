@@ -1,0 +1,101 @@
+# 📱💻 NovaApps – Téléphone & Ordinateur pour Nova-Life
+
+Plugin serveur Nova-Life : Amboise qui ajoute des applications au **téléphone** et à l'**ordinateur**.
+
+| Où | Appli | Ce qu'elle fait |
+|---|---|---|
+| 📱 Téléphone | **N** | Réseau social façon X : fil d'actu, posts (280 car.), j'aime, réponses, @mentions (notifiées), #hashtags et tendances, profils, recherche de comptes. Option : recopie des posts dans un salon Discord. |
+| 📱 Téléphone | **Neonous** | Rencontres façon Tinder : profil (prénom, âge, genre, ce que tu cherches, bio), découverte des profils compatibles (Passer / Liker), match quand c'est réciproque, messagerie entre matchs, masquer / supprimer son profil. |
+| 📱 + 💻 | **Pôle Travail** | Même appli et **mêmes données** sur le téléphone et l'ordinateur. Offres d'emploi, recherche par mot-clé, candidatures (le recruteur est notifié), suivi des candidatures, dépôt d'une recherche d'emploi (CV). Espace recruteur : publier une offre, voir les candidatures, accepter / refuser (le candidat est notifié), consulter les recherches d'emploi. **Publication d'offres et dépôt de CV sur l'ordinateur** (option pour l'autoriser aussi sur le téléphone). |
+| 📱 Téléphone | **Capital Motors** | Catalogue de la concession, **commande de véhicule**, suivi de la commande, rendez-vous atelier. Espace concession (membres de l'entreprise) : accepter / refuser, ajouter une note, marquer « prête », **livrer** → le véhicule est créé directement dans le garage du client. Les commandes et RDV arrivent aussi **dans le salon Discord du bot Garage / Concession, avec le bouton « 🎫 Je me charge du ticket »**. |
+| 💻 Ordinateur | **Discord** | Lit les **vrais salons** de ton serveur Discord et permet d'y **écrire depuis le jeu** (sous le nom RP du joueur si tu configures un webhook). Affiche le lien d'invitation. |
+| 💻 Ordinateur | **Blue Lightfox** | Navigateur avec de **vraies recherches Internet** : Google si tu configures une clé API, sinon Wikipédia (gratuit, sans clé). Ouvre les résumés d'articles, envoie le lien dans le chat. Propose aussi les « sites » du serveur (pole-travail.nl, capital-motors.nl, sites perso dans la config). |
+
+### Ouvrir le téléphone / l'ordinateur
+
+- Téléphone : touche **F7** ou commande **/tel**
+- Ordinateur : touche **F8** ou commande **/ordi**
+- Les touches se changent dans `config.json`.
+- Par défaut l'ordinateur s'ouvre partout. Pour qu'il ne marche **que devant un vrai PC du jeu**, place-toi devant un ordinateur et tape **/ordi_ajouter** (admin). **/ordi_retirer** supprime le plus proche.
+
+> ⚠️ **Ce qu'un plugin peut faire et ne peut pas faire.**
+> Les plugins Nova-Life tournent sur le serveur. Ils ne peuvent pas modifier l'écran du téléphone d'origine du jeu, ni afficher une vraie page web.
+> Ces applis utilisent donc les fenêtres de plugin du jeu (listes, textes, saisies), ouvertes par touche ou par commande.
+> Pour la même raison, Blue Lightfox fait de vraies recherches (Google / Wikipédia) mais affiche des **titres, extraits et résumés en texte**, pas les sites eux-mêmes.
+
+---
+
+## 1. Compiler le plugin
+
+Prérequis : Nova-Life installé via Steam, et le [SDK .NET](https://dotnet.microsoft.com/download) (8 ou plus) **ou** Visual Studio.
+
+1. Ouvre `NovaApps.csproj` et vérifie la ligne `NovaManaged` : elle doit pointer vers le dossier
+   `...\steamapps\common\Nova-Life\Nova-Life_Data\Managed` de ton PC.
+2. Dans un terminal, dans le dossier `plugin-novalife` :
+   ```bash
+   dotnet build -c Release
+   ```
+   (ou `dotnet build -c Release -p:NovaManaged="D:\SteamLibrary\steamapps\common\Nova-Life\Nova-Life_Data\Managed"`)
+3. Récupère `bin/Release/net48/NovaApps.dll`.
+
+> Le plugin n'utilise que l'API de base du jeu (pas besoin de ModKit ni d'AAMenu).
+
+## 2. Installer sur le serveur
+
+1. Copie `NovaApps.dll` dans le dossier `Plugins` de ton serveur.
+2. Démarre le serveur une fois : le dossier `Plugins/NovaApps/` est créé avec `config.json` et les fichiers de données
+   (`n.json`, `neonous.json`, `pole-travail.json`, `capital-motors.json`).
+3. Arrête le serveur, remplis `config.json` (voir ci-dessous) et redémarre.
+
+## 3. Configuration (`Plugins/NovaApps/config.json`)
+
+### Capital Motors
+```json
+"CapitalMotors": {
+  "Nom": "Capital Motors",
+  "EntreprisesConcession": [12],
+  "CreerVehiculeALaLivraison": true,
+  "SalonDiscordCommandes": "ID_DU_SALON_RECEPTION",
+  "Catalogue": [ { "ModelId": 3, "Nom": "Sultan RS", "Prix": 45000 } ]
+}
+```
+- `EntreprisesConcession` : ID de l'entreprise (ou des entreprises) de la concession en jeu. Ses membres ont accès à l'**Espace concession**. Les admins y ont toujours accès.
+- Au premier lancement, **tous les véhicules du jeu** sont ajoutés au catalogue avec « prix sur devis ». La concession peut ensuite modifier les prix et retirer des modèles **en jeu** : *Espace concession → Modifier le catalogue*.
+- `SalonDiscordCommandes` : mets le même ID que `SALON_RECEPTION_ID` du bot pour recevoir les commandes là où arrivent déjà les formulaires Discord. Il faut aussi remplir `Discord.TokenBot`.
+
+### Discord (appli de l'ordinateur + liaison avec le bot)
+```json
+"Discord": {
+  "TokenBot": "LE_MEME_TOKEN_QUE_DISCORD_TOKEN_DU_BOT",
+  "Invitation": "https://discord.gg/xxxx",
+  "Salons": [
+    { "Nom": "général", "Id": "123456789", "Webhook": "https://discord.com/api/webhooks/...", "LectureSeule": false },
+    { "Nom": "annonces", "Id": "987654321", "Webhook": "", "LectureSeule": true }
+  ],
+  "MessagesAffiches": 15
+}
+```
+- **Utilise le token du bot Garage / Concession** (`DISCORD_TOKEN` du `.env`). Le bouton « Je me charge du ticket » des commandes passées en jeu est alors géré par ce bot, comme pour les formulaires Discord.
+- Le bot doit voir les salons listés (permissions *Voir le salon* + *Lire l'historique*).
+- Pour **lire** le contenu des messages, active **Message Content Intent** : [Discord Developer Portal](https://discord.com/developers/applications) → ton appli → **Bot** → *Privileged Gateway Intents*.
+- `Webhook` (facultatif) : paramètres du salon → Intégrations → Webhooks → *Copier l'URL*. Avec un webhook, les messages envoyés depuis le jeu apparaissent sous le **nom RP** du joueur. Sans webhook, le bot poste « **Prénom Nom** (en jeu) : message ».
+- ⚠️ `config.json` contient le token : ne le partage jamais.
+
+### Blue Lightfox (recherche web)
+- Rien à faire : les recherches passent par **Wikipédia** par défaut.
+- Pour de **vrais résultats Google** : crée un moteur sur <https://programmablesearchengine.google.com> (option « Rechercher sur tout le Web ») pour obtenir l'**ID du moteur (cx)**, puis une clé API *Custom Search JSON API* sur <https://console.cloud.google.com>. Remplis `GoogleCleApi` et `GoogleMoteurId`. Google offre un quota gratuit limité de requêtes par jour : vérifie les conditions actuelles sur leur site.
+- `Sites` : ajoute des « sites internes » au serveur (mairie, entreprises, journal RP...) avec des mots-clés. Ils apparaissent sur la page d'accueil et en tête des résultats.
+
+### Pôle Travail
+- `PublicationDepuisTelephone` : `false` par défaut (publication d'offres et dépôt de CV seulement sur ordinateur). Mets `true` pour l'autoriser aussi sur le téléphone.
+- `WebhookDiscord` (facultatif) : chaque nouvelle offre est annoncée dans ce salon Discord.
+
+### N
+- `WebhookDiscord` (facultatif) : chaque post N est recopié dans ce salon Discord (« fil N » visible hors jeu).
+- `LongueurMax`, `PostsAffiches` : taille max d'un post et nombre de posts dans le fil.
+
+## Modération
+
+- Les admins peuvent supprimer n'importe quel post N et gérer toutes les offres Pôle Travail (*Espace recruteur → Mes offres*).
+- Les textes tapés par les joueurs sont nettoyés : impossible d'y glisser des balises de couleur / taille. Personne ne peut faire un `@everyone` sur Discord depuis le jeu.
+- Toutes les données sont des fichiers JSON lisibles dans `Plugins/NovaApps/`. Fais-en une copie de sauvegarde de temps en temps.

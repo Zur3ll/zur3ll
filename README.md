@@ -54,6 +54,14 @@ Prérequis : [Node.js](https://nodejs.org) version 18 ou plus.
 Au démarrage, le bot publie automatiquement le message avec le bouton dans chacun des deux salons. S'il est déjà présent, il ne le republie pas.
 Le bot doit rester allumé pour que les boutons fonctionnent.
 
+## 📱 Plugin en jeu : téléphone & ordinateur
+
+Le dossier [`plugin-novalife`](plugin-novalife/README.md) contient un plugin serveur Nova-Life qui ajoute au jeu :
+- **Téléphone** : N (réseau social), Neonous (rencontres), Pôle Travail, Capital Motors (commande de véhicule).
+- **Ordinateur** : Discord (relié à ce serveur Discord), Blue Lightfox (vraies recherches web), Pôle Travail.
+
+Les commandes et rendez-vous passés depuis l'appli Capital Motors arrivent dans le **salon de réception de ce bot**, avec le même bouton « 🎫 Je me charge du ticket ». Il suffit de mettre le même token et l'ID du salon de réception dans la config du plugin.
+
 ## Personnaliser
 
 Les textes, les questions et les couleurs se modifient dans `src/index.js`, dans l'objet `FORMULAIRES` en haut du fichier.

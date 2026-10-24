@@ -1,0 +1,209 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using Life;
+using Life.Network;
+using Life.UI;
+
+namespace NovaApps.Core
+{
+    /// <summary>Une ligne cliquable d'une liste.</summary>
+    public class Ligne
+    {
+        public string Texte;
+        public Action Action;
+
+        public Ligne(string texte, Action action)
+        {
+            Texte = texte;
+            Action = action;
+        }
+    }
+
+    /// <summary>Un bouton en bas d'une fenêtre.</summary>
+    public class Bouton
+    {
+        public string Texte;
+        public Action Action;
+
+        public Bouton(string texte, Action action)
+        {
+            Texte = texte;
+            Action = action;
+        }
+    }
+
+    /// <summary>Une question d'un formulaire en plusieurs étapes.</summary>
+    public class Champ
+    {
+        public string Cle;
+        public string Question;
+        public string Exemple;
+        public int Max = 200;
+        public bool Optionnel;
+        /// <summary>Valeur utilisée si le joueur laisse le champ vide (le champ devient alors optionnel).</summary>
+        public string ParDefaut;
+
+        public Champ(string cle, string question, string exemple, int max = 200)
+        {
+            Cle = cle;
+            Question = question;
+            Exemple = exemple;
+            Max = max;
+        }
+    }
+
+    /// <summary>
+    /// Raccourcis autour de UIPanel : toutes les applis (téléphone et ordinateur) sont construites avec.
+    /// Chaque bouton ferme la fenêtre courante avant d'ouvrir la suivante.
+    /// </summary>
+    public static class Ecran
+    {
+        /// <summary>Liste de lignes cliquables (menu d'appli, fil d'actu, liste d'offres...).</summary>
+        public static void Liste(Player joueur, string titre, IEnumerable<Ligne> lignes, Action retour, string vide = "Rien pour le moment.")
+        {
+            UIPanel panel = new UIPanel(titre, UIPanel.PanelType.Tab);
+
+            List<Ligne> liste = lignes.ToList();
+            if (liste.Count == 0)
+                liste.Add(new Ligne(vide, () => Liste(joueur, titre, new List<Ligne>(), retour, vide)));
+
+            foreach (Ligne ligne in liste)
+            {
+                Action action = ligne.Action;
+                panel.AddTabLine(ligne.Texte, ui =>
+                {
+                    joueur.ClosePanel(ui);
+                    action();
+                });
+            }
+
+            AjouterRetour(joueur, panel, retour);
+            panel.AddButton("Ouvrir", ui => ui.SelectTab());
+            joueur.ShowPanelUI(panel);
+        }
+
+        /// <summary>Fenêtre de texte avec des boutons (lecture d'un post, d'une offre...).</summary>
+        public static void Texte(Player joueur, string titre, string texte, Action retour, params Bouton[] boutons)
+        {
+            UIPanel panel = new UIPanel(titre, UIPanel.PanelType.Text).SetText(texte);
+
+            AjouterRetour(joueur, panel, retour);
+            foreach (Bouton bouton in boutons.Where(b => b != null))
+            {
+                Action action = bouton.Action;
+                panel.AddButton(bouton.Texte, ui =>
+                {
+                    joueur.ClosePanel(ui);
+                    action();
+                });
+            }
+
+            joueur.ShowPanelUI(panel);
+        }
+
+        /// <summary>Demande un texte au joueur.</summary>
+        public static void Saisie(Player joueur, string titre, string question, string exemple, Action<string> valider, Action retour, int max = 200, bool optionnel = false)
+        {
+            UIPanel panel = new UIPanel(titre, UIPanel.PanelType.Input)
+                .SetText(question)
+                .SetInputPlaceholder(exemple);
+
+            AjouterRetour(joueur, panel, retour);
+            panel.AddButton("Valider", ui =>
+            {
+                string valeur = Nettoyer(ui.inputText);
+
+                if (valeur.Length == 0 && !optionnel)
+                {
+                    joueur.Notify(titre, "Ce champ ne peut pas être vide.", NotificationManager.Type.Error);
+                    return;
+                }
+
+                if (valeur.Length > max)
+                {
+                    joueur.Notify(titre, $"{max} caractères maximum ({valeur.Length} actuellement).", NotificationManager.Type.Error);
+                    return;
+                }
+
+                joueur.ClosePanel(ui);
+                valider(valeur);
+            });
+
+            joueur.ShowPanelUI(panel);
+        }
+
+        /// <summary>Enchaîne plusieurs Saisie puis appelle fin avec toutes les réponses.</summary>
+        public static void Formulaire(Player joueur, string titre, IList<Champ> champs, Action<Dictionary<string, string>> fin, Action retour)
+        {
+            Etape(joueur, titre, champs, 0, new Dictionary<string, string>(), fin, retour);
+        }
+
+        private static void Etape(Player joueur, string titre, IList<Champ> champs, int index, Dictionary<string, string> reponses, Action<Dictionary<string, string>> fin, Action retour)
+        {
+            if (index >= champs.Count)
+            {
+                fin(reponses);
+                return;
+            }
+
+            Champ champ = champs[index];
+            string question = $"<b>Étape {index + 1}/{champs.Count}</b>\n{champ.Question}";
+            if (champ.ParDefaut != null)
+                question += $"\n<i>Laisse vide pour : {champ.ParDefaut}</i>";
+            else if (champ.Optionnel)
+                question += "\n<i>(facultatif)</i>";
+
+            Saisie(joueur, titre, question, champ.Exemple, valeur =>
+            {
+                reponses[champ.Cle] = valeur.Length == 0 && champ.ParDefaut != null ? champ.ParDefaut : valeur;
+                Etape(joueur, titre, champs, index + 1, reponses, fin, retour);
+            },
+            // "Retour" revient à la question précédente, ou quitte le formulaire à la première.
+            index == 0 ? retour : () => Etape(joueur, titre, champs, index - 1, reponses, fin, retour),
+            champ.Max, champ.Optionnel || champ.ParDefaut != null);
+        }
+
+        /// <summary>Demande "Oui / Non" avant une action importante.</summary>
+        public static void Confirmer(Player joueur, string titre, string texte, Action oui, Action non)
+        {
+            Texte(joueur, titre, texte, non, new Bouton("Confirmer", oui));
+        }
+
+        private static void AjouterRetour(Player joueur, UIPanel panel, Action retour)
+        {
+            panel.AddButton(retour != null ? "Retour" : "Fermer", ui =>
+            {
+                joueur.ClosePanel(ui);
+                retour?.Invoke();
+            });
+        }
+
+        /// <summary>
+        /// Retire les balises de texte riche qu'un joueur pourrait glisser dans un message
+        /// (&lt;color&gt;, &lt;size&gt;...) pour qu'il ne casse pas l'affichage des autres.
+        /// </summary>
+        public static string Nettoyer(string texte)
+        {
+            if (string.IsNullOrEmpty(texte)) return "";
+            return texte.Replace("<", "‹").Replace(">", "›").Trim();
+        }
+
+        public static string Couper(string texte, int max)
+        {
+            if (string.IsNullOrEmpty(texte)) return "";
+            string uneLigne = texte.Replace("\n", " ");
+            return uneLigne.Length <= max ? uneLigne : uneLigne.Substring(0, max - 1) + "…";
+        }
+
+        public static string Date(DateTime date)
+        {
+            return date.Date == DateTime.Today ? date.ToString("HH:mm") : date.ToString("dd/MM HH:mm");
+        }
+
+        public static string Couleur(string texte, string hex)
+        {
+            return $"<color={hex}>{texte}</color>";
+        }
+    }
+}

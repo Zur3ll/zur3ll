@@ -1,0 +1,49 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <OutputType>Library</OutputType>
+    <RootNamespace>NovaApps</RootNamespace>
+    <AssemblyName>NovaApps</AssemblyName>
+    <LangVersion>latest</LangVersion>
+    <Version>1.0.0</Version>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+
+  <!--
+    Dossier "Managed" du jeu, là où se trouvent Assembly-CSharp.dll, Mirror.dll...
+    Modifie ce chemin si Nova-Life n'est pas installé à l'emplacement Steam par défaut,
+    ou passe-le en ligne de commande : dotnet build -p:NovaManaged="D:\...\Managed"
+  -->
+  <PropertyGroup>
+    <NovaManaged Condition=" '$(NovaManaged)' == '' ">C:\Program Files (x86)\Steam\steamapps\common\Nova-Life\Nova-Life_Data\Managed</NovaManaged>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>$(NovaManaged)\Assembly-CSharp.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Mirror">
+      <HintPath>$(NovaManaged)\Mirror.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>$(NovaManaged)\Newtonsoft.Json.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(NovaManaged)\UnityEngine.CoreModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.JSONSerializeModule">
+      <HintPath>$(NovaManaged)\UnityEngine.JSONSerializeModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Net.Http" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Permet de compiler sans Visual Studio "Développement .NET Desktop" installé -->
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+  </ItemGroup>
+</Project>
