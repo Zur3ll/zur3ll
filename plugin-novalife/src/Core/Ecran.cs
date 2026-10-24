@@ -82,14 +82,14 @@ namespace NovaApps.Core
                 Action action = ligne.Action;
                 panel.AddTabLine(ligne.Texte, ui =>
                 {
-                    joueur.ClosePanel(ui);
+                    Fermer(joueur, ui);
                     action();
                 });
             }
 
             AjouterRetour(joueur, panel, retour);
             panel.AddButton("Ouvrir", ui => ui.SelectTab());
-            joueur.ShowPanelUI(panel);
+            Afficher(joueur, panel);
         }
 
         /// <summary>Fenêtre de texte avec des boutons (lecture d'un post, d'une offre...).</summary>
@@ -103,12 +103,12 @@ namespace NovaApps.Core
                 Action action = bouton.Action;
                 panel.AddButton(bouton.Texte, ui =>
                 {
-                    joueur.ClosePanel(ui);
+                    Fermer(joueur, ui);
                     action();
                 });
             }
 
-            joueur.ShowPanelUI(panel);
+            Afficher(joueur, panel);
         }
 
         /// <summary>Demande un texte au joueur.</summary>
@@ -135,11 +135,11 @@ namespace NovaApps.Core
                     return;
                 }
 
-                joueur.ClosePanel(ui);
+                Fermer(joueur, ui);
                 valider(valeur);
             });
 
-            joueur.ShowPanelUI(panel);
+            Afficher(joueur, panel);
         }
 
         /// <summary>Enchaîne plusieurs Saisie puis appelle fin avec toutes les réponses.</summary>
@@ -198,11 +198,40 @@ namespace NovaApps.Core
             Texte(joueur, titre, texte, non, new Bouton("Confirmer", oui));
         }
 
+        /// <summary>Fenêtre de plugin actuellement ouverte, par joueur (pour la refermer avec la touche du téléphone / PC).</summary>
+        private static readonly Dictionary<Player, UIPanel> ouvertes = new Dictionary<Player, UIPanel>();
+
+        private static void Afficher(Player joueur, UIPanel panel)
+        {
+            ouvertes[joueur] = panel;
+            joueur.ShowPanelUI(panel);
+        }
+
+        private static void Fermer(Player joueur, UIPanel panel)
+        {
+            if (ouvertes.TryGetValue(joueur, out UIPanel courante) && courante == panel)
+                ouvertes.Remove(joueur);
+            joueur.ClosePanel(panel);
+        }
+
+        /// <summary>Une fenêtre des applis est-elle ouverte pour ce joueur ?</summary>
+        public static bool EstOuvert(Player joueur) => ouvertes.ContainsKey(joueur);
+
+        /// <summary>Ferme la fenêtre des applis du joueur, s'il y en a une.</summary>
+        public static void FermerTout(Player joueur)
+        {
+            if (ouvertes.TryGetValue(joueur, out UIPanel courante))
+                Fermer(joueur, courante);
+        }
+
+        /// <summary>Oublie la fenêtre du joueur (fermée par Échap ou à la déconnexion, sans passer par nos boutons).</summary>
+        public static void Oublier(Player joueur) => ouvertes.Remove(joueur);
+
         private static void AjouterRetour(Player joueur, UIPanel panel, Action retour)
         {
             panel.AddButton(retour != null ? "Retour" : "Fermer", ui =>
             {
-                joueur.ClosePanel(ui);
+                Fermer(joueur, ui);
                 retour?.Invoke();
             });
         }

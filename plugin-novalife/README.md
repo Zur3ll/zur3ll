@@ -18,9 +18,11 @@ Plugin serveur Nova-Life : Amboise qui ajoute des applications au **téléphone*
 
 ### Ouvrir le téléphone / l'ordinateur
 
-- Téléphone : touche **F7** ou commande **/tel**
-- Ordinateur : touche **F8** ou commande **/ordi**
-- Les touches se changent dans `config.json`.
+- Téléphone : touche **F9** (la même que le téléphone du jeu) ou commande **/tel**
+- Ordinateur : touche **F2** (la même que l'ordinateur du jeu) ou commande **/ordi**
+- Les applis **s'ouvrent en même temps que le téléphone / l'ordinateur du jeu** et **se referment avec lui** quand on rappuie sur la touche. Si les deux se décalent (par exemple après avoir fermé avec Échap), appuie une fois de plus.
+- Les touches se changent dans `config.json` (`ToucheTelephone`, `ToucheOrdinateur`). ⚠️ Si ton `config.json` existait déjà, il garde les anciennes touches F7 / F8 : remplace-les par F9 et F2.
+- `EcranDeVerrouillage` : `false` par défaut, puisque le téléphone du jeu affiche déjà l'heure. Mets `true` pour avoir l'écran de verrouillage du plugin.
 - Par défaut l'ordinateur s'ouvre partout. Pour qu'il ne marche **que devant un vrai PC du jeu**, place-toi devant un ordinateur et tape **/ordi_ajouter** (admin). **/ordi_retirer** supprime le plus proche.
 - **/ordi_ajouter 5** réserve ce PC aux membres de l'entreprise 5 : par exemple les PC du commissariat pour la police, ceux de la rédaction pour le journal. Les autres joueurs voient « Session verrouillée : mot de passe requis ».
 

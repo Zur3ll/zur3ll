@@ -75,11 +75,27 @@ namespace NovaApps
         {
             base.OnPlayerInput(player, keyCode, onUI);
 
-            if (onUI || player?.character == null || keyCode == KeyCode.None) return;
+            if (player?.character == null || keyCode == KeyCode.None) return;
 
-            if (keyCode == toucheTelephone)
+            // Échap ferme les fenêtres sans prévenir le plugin : on l'oublie pour rester synchronisé.
+            if (keyCode == KeyCode.Escape)
+            {
+                Ecran.Oublier(player);
+                return;
+            }
+
+            // Les touches F1-F15 ne s'écrivent pas dans un champ de texte : on les accepte même quand une interface est ouverte,
+            // sinon il serait impossible de refermer les applis avec la même touche que le téléphone du jeu.
+            bool toucheDeFonction = keyCode >= KeyCode.F1 && keyCode <= KeyCode.F15;
+            if (onUI && !toucheDeFonction) return;
+            if (keyCode != toucheTelephone && keyCode != toucheOrdinateur) return;
+
+            // Même touche que le téléphone / l'ordinateur du jeu : nos applis s'ouvrent et se ferment avec lui.
+            if (Ecran.EstOuvert(player))
+                Ecran.FermerTout(player);
+            else if (keyCode == toucheTelephone)
                 OuvrirTelephone(player);
-            else if (keyCode == toucheOrdinateur)
+            else
                 OuvrirOrdinateur(player);
         }
 
@@ -191,6 +207,7 @@ namespace NovaApps
             base.OnPlayerDisconnect(conn);
             Player joueur = Nova.server.Players.FirstOrDefault(p => p?.conn == conn);
             if (joueur?.character != null) debutBatterie.Remove(joueur.character.Id);
+            if (joueur != null) Ecran.Oublier(joueur);
         }
 
         private string BarreDeStatut(Player joueur) => $"{DateTime.Now:HH:mm}      4G      {Batterie(joueur)} %";
@@ -221,6 +238,12 @@ namespace NovaApps
         private void OuvrirTelephone(Player joueur)
         {
             if (joueur?.character == null || !PeutUtiliser(joueur, true)) return;
+
+            if (!Config.EcranDeVerrouillage)
+            {
+                Accueil(joueur);
+                return;
+            }
 
             List<string> notifications = Notifications(joueur);
             Ecran.Texte(joueur, BarreDeStatut(joueur),

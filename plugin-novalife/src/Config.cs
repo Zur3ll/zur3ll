@@ -10,8 +10,15 @@ namespace NovaApps
     {
         // Touches pour ouvrir le téléphone / l'ordinateur (noms Unity : F7, F8, P, ...). Vide = désactivé.
         // Liste : https://docs.unity3d.com/ScriptReference/KeyCode.html
-        public string ToucheTelephone = "F7";
-        public string ToucheOrdinateur = "F8";
+        // Mets les mêmes touches que le téléphone (F9) et l'ordinateur (F2) du jeu pour que les applis s'ouvrent avec eux.
+        public string ToucheTelephone = "F9";
+        public string ToucheOrdinateur = "F2";
+
+        /// <summary>
+        /// Écran de verrouillage (heure, notifications) avant l'accueil des applis.
+        /// À désactiver si les applis s'ouvrent avec le téléphone du jeu, qui affiche déjà l'heure.
+        /// </summary>
+        public bool EcranDeVerrouillage = false;
 
         /// <summary>
         /// ID des objets "téléphone" du jeu : il faut en porter un pour utiliser les applis.
