@@ -23,6 +23,9 @@ namespace SupportTicket
         // Touche "," (Comma) pour ouvrir la liste des tickets côté staff
         public string ToucheStaff = "Comma";
 
+        // Remplace le panel « Nouveau ticket » du jeu (touche N) par ce menu
+        public bool RemplacerPanelDuJeu = true;
+
         // Le staff doit être en service admin pour voir et traiter les tickets
         public bool ServiceAdminRequis = true;
 

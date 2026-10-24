@@ -28,11 +28,15 @@ Ce plugin ajoute un menu de tickets à catégories avec icônes (touche **N** pa
 3. Compile en Release, puis copie `bin/Release/net472/SupportTicket.dll` dans le dossier `Plugins` du serveur.
 4. Redémarre le serveur. Le fichier `Plugins/SupportTicket/config.json` est créé automatiquement.
 
-## ⚠️ Touche N et panel du jeu
+## Remplacement du panel « Nouveau ticket » du jeu
 
-La touche **N** ouvre aussi le panel « Nouveau ticket » intégré au jeu, qu'un plugin ne peut pas désactiver. Les deux menus s'ouvrent l'un sur l'autre : le joueur ferme celui du jeu avec **ANNULER** pour utiliser celui du plugin. Pour l'éviter, mets une autre touche dans `ToucheJoueur` (pas `F2`, qui ouvre l'ordinateur/tablette).
+Quand on appuie sur **N**, le jeu envoie au serveur la commande réseau `CmdInputTicketPanel`, et le serveur répond en ouvrant le panel du jeu. Avec `RemplacerPanelDuJeu` à `true`, le plugin remplace cette réponse, ainsi que celle de `CmdTicketPanel`, pour ouvrir ce menu à la place.
 
-Si le serveur a déjà un `config.json` créé avec une ancienne version, il garde les valeurs qui y sont écrites (touches, icônes). Modifie-les à la main ou supprime le fichier pour qu'il soit recréé.
+Au démarrage, la console du serveur affiche l'une de ces deux lignes :
+- `[SupportTicket] Panel de ticket du jeu remplacé (2/2 commandes).` : le remplacement est actif ;
+- un message d'erreur `[SupportTicket] ...` : le panel du jeu est conservé, par exemple après une mise à jour du jeu qui a changé ces commandes.
+
+Si le serveur a déjà un `config.json` créé avec une ancienne version, il garde les valeurs qui y sont écrites. Supprime-le pour qu'il soit recréé avec les nouvelles options.
 
 ## Configuration (`config.json`)
 
@@ -43,6 +47,7 @@ Si le serveur a déjà un `config.json` créé avec une ancienne version, il gar
 | `CouleurTitre` | Couleur du titre (hexadécimal) |
 | `ToucheJoueur` | Touche d'ouverture pour les joueurs (`N` par défaut) |
 | `ToucheStaff` | Touche de la liste staff (`Comma` = touche `,` par défaut) |
+| `RemplacerPanelDuJeu` | Remplace le panel « Nouveau ticket » du jeu par ce menu (`true` par défaut) |
 | `ServiceAdminRequis` | Le staff doit être en service admin pour recevoir et traiter les tickets |
 | `Categories` | Liste des catégories : `Titre`, `Description`, `IconeId` |
 

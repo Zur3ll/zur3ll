@@ -30,6 +30,7 @@ namespace SupportTicket
         private SupportConfig config;
         private KeyCode toucheJoueur;
         private KeyCode toucheStaff;
+        private bool panelJeuRemplace;
 
         public SupportTicketPlugin(IGameAPI api) : base(api)
         {
@@ -58,6 +59,9 @@ namespace SupportTicket
                 OuvrirApercuIcones(player, Math.Max(1, page));
             }).Register();
 
+            if (config.RemplacerPanelDuJeu)
+                panelJeuRemplace = RemplacementPanelJeu.Installer(OuvrirMenuJoueur);
+
             Debug.Log("[SupportTicket] Plugin initialisé");
         }
 
@@ -68,7 +72,10 @@ namespace SupportTicket
             if (onUI)
                 return;
 
-            if (keyCode == toucheJoueur)
+            // Si le panel du jeu est remplacé, la touche N ouvre déjà notre menu via la commande du jeu
+            bool dejaGereParLeJeu = panelJeuRemplace && toucheJoueur == KeyCode.N;
+
+            if (keyCode == toucheJoueur && !dejaGereParLeJeu)
                 OuvrirMenuJoueur(player);
             else if (toucheStaff != KeyCode.None && keyCode == toucheStaff)
                 OuvrirListeStaff(player);
