@@ -1,12 +1,12 @@
 # SupportTicket – plugin Nova-Life : Amboise
 
-Ce plugin remplace le panel « Ticket support » de la touche **N** par un menu à catégories avec icônes, dans le style « Support BlueSide ».
+Ce plugin ajoute un menu de tickets à catégories avec icônes (touche **F2** par défaut), dans le style « Support BlueSide ».
 
-## Côté joueur (touche N ou `/ticket`)
+## Côté joueur (touche F2 ou `/ticket`)
 
 1. Le menu **Support &lt;nom du serveur&gt; / Ouvrir un ticket** s'ouvre. Chaque catégorie a une icône, un titre en gras et une description. Les boutons sont **CHOISIR** (vert) et **FERMER** (rouge).
 2. Après le choix de la catégorie, le joueur décrit son problème puis clique sur **ENVOYER**.
-3. S'il a déjà un ticket ouvert, la touche N affiche ce ticket et son statut (en attente ou pris en charge par un membre du staff), avec un bouton **CLÔTURER**.
+3. S'il a déjà un ticket ouvert, la touche affiche ce ticket et son statut (en attente ou pris en charge par un membre du staff), avec un bouton **CLÔTURER**.
 
 ## Côté staff (`/tickets`, ou une touche à définir dans la config)
 
@@ -28,13 +28,11 @@ Ce plugin remplace le panel « Ticket support » de la touche **N** par un menu 
 3. Compile en Release, puis copie `bin/Release/net472/SupportTicket.dll` dans le dossier `Plugins` du serveur.
 4. Redémarre le serveur. Le fichier `Plugins/SupportTicket/config.json` est créé automatiquement.
 
-## ⚠️ Conflit avec Essentials
+## ⚠️ Pourquoi pas la touche N ?
 
-Le panel moche vient du plugin **Essentials** (`Plugins/Essentials.dll`, code source : `TeamNovaFR/Essentials`). Ce plugin ouvre lui aussi son panel quand on appuie sur N. Il n'a pas d'option pour le désactiver. Trois solutions :
+La touche **N** ouvre déjà le panel « Nouveau ticket » intégré au jeu. Un plugin ne peut pas le désactiver : avec `ToucheJoueur` sur `N`, les deux menus s'ouvrent l'un sur l'autre. Choisis donc une touche libre.
 
-- recompiler Essentials sans le bloc `if(keyCode == KeyCode.N && !onUI)` de `EssentialsPlugin.cs` ;
-- retirer Essentials, si tu n'utilises aucune autre de ses fonctions ;
-- mettre une autre touche dans `ToucheJoueur`.
+Si le serveur a déjà un `config.json` créé avec l'ancienne version, il garde la touche qui y est écrite. Modifie `ToucheJoueur` à la main dans ce fichier.
 
 ## Configuration (`config.json`)
 
@@ -43,7 +41,7 @@ Le panel moche vient du plugin **Essentials** (`Plugins/Essentials.dll`, code so
 | `NomServeur` | Texte affiché après « Support » |
 | `SousTitre` | Ligne sous le titre (« Ouvrir un ticket ») |
 | `CouleurTitre` | Couleur du titre (hexadécimal) |
-| `ToucheJoueur` | Touche d'ouverture pour les joueurs (`N` par défaut) |
+| `ToucheJoueur` | Touche d'ouverture pour les joueurs (`F2` par défaut) |
 | `ToucheStaff` | Touche de la liste staff (`None` = commande `/tickets` uniquement) |
 | `ServiceAdminRequis` | Le staff doit être en service admin pour recevoir et traiter les tickets |
 | `Categories` | Liste des catégories : `Titre`, `Description`, `IconeId` |

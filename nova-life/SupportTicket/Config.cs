@@ -19,7 +19,7 @@ namespace SupportTicket
         public string CouleurTitre = "#9db4ff";
 
         // Touches : noms Unity (https://docs.unity3d.com/ScriptReference/KeyCode.html)
-        public string ToucheJoueur = "N";
+        public string ToucheJoueur = "F2";
         // "None" pour désactiver la touche staff (la commande /tickets reste disponible)
         public string ToucheStaff = "None";
 

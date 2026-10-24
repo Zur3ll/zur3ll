@@ -87,6 +87,11 @@ namespace SupportTicket
             return string.IsNullOrEmpty(sousTitre) ? titre : $"{titre}\n<size=60%><color=#ffffff>{sousTitre}</color></size>";
         }
 
+        // Titre en gras + description plus petite en dessous, comme le menu BlueSide.
+        // La colonne de droite (prix) est trop étroite pour une phrase, on la laisse vide.
+        private static string Ligne(string titre, string description) =>
+            string.IsNullOrEmpty(description) ? $"<b>{titre}</b>" : $"<b>{titre}</b>\n<size=75%>{description}</size>";
+
         private static string Bouton(string texte, string couleur) => $"<color={couleur}><b>{texte}</b></color>";
 
         private Ticket TicketDe(Player player) => tickets.FirstOrDefault(t => t.Auteur == player);
@@ -109,7 +114,7 @@ namespace SupportTicket
             foreach (TicketCategory categorie in config.Categories)
             {
                 TicketCategory choix = categorie;
-                panel.AddTabLine($"<b>{choix.Titre}</b>", choix.Description, choix.IconeId, ui => OuvrirSaisie(player, choix));
+                panel.AddTabLine(Ligne(choix.Titre, choix.Description), "", choix.IconeId, ui => OuvrirSaisie(player, choix));
             }
 
             player.ShowPanelUI(panel);
@@ -184,7 +189,7 @@ namespace SupportTicket
         private static string Anciennete(DateTime date)
         {
             int minutes = (int)(DateTime.Now - date).TotalMinutes;
-            return minutes < 1 ? "à l'instant" : $"il y a {minutes} min";
+            return minutes < 1 ? "à l'instant" : $"{minutes} min";
         }
 
         private void OuvrirListeStaff(Player player)
@@ -220,11 +225,11 @@ namespace SupportTicket
             {
                 Ticket t = ticket;
                 string extrait = t.Message.Length > 45 ? t.Message.Substring(0, 45) + "..." : t.Message;
-                string charge = t.PrisEnChargePar != null ? $" · <color={Vert}>{t.PrisEnChargePar}</color>" : "";
+                string charge = t.PrisEnChargePar != null ? $"<color={Vert}>{t.PrisEnChargePar}</color> · " : "";
 
                 panel.AddTabLine(
-                    $"<b>{NomRP(t.Auteur)}</b> — {t.Categorie.Titre}",
-                    $"{extrait}\n<color={Gris}>{Anciennete(t.OuvertLe)}</color>{charge}",
+                    Ligne($"{NomRP(t.Auteur)} — {t.Categorie.Titre}", $"{charge}{extrait}"),
+                    Anciennete(t.OuvertLe),
                     t.Categorie.IconeId,
                     ui =>
                     {
