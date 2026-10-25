@@ -158,6 +158,19 @@ details.rule summary::after { content: "›"; transform: rotate(90deg); transiti
 details.rule[open] summary::after { transform: rotate(-90deg); }
 details.rule ol { margin: 0 0 16px; padding-left: 22px; display: flex; flex-direction: column; gap: 6px; color: rgba(245, 243, 255, .86); }
 
+/* Formulaires (espace staff) */
+.form { display: flex; flex-direction: column; gap: 14px; max-width: 640px; }
+.field { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600; color: var(--ink-soft); }
+.field input, .field select, .field textarea { background: rgba(255, 255, 255, .07); border: 1px solid var(--app-line); border-radius: 10px; padding: 10px 12px; color: var(--ink); font-size: 15px; font-weight: 400; outline: none; resize: vertical; }
+.field input:focus, .field select:focus, .field textarea:focus { border-color: var(--accent); }
+.field select option { background: var(--app-panel); }
+.msg { margin: 0; font-size: 14px; min-height: 1px; }
+.msg:empty { display: none; }
+.msg.ok { color: #5be29b; }
+.msg.ko { color: #ff8a8d; }
+.btn:disabled { opacity: .5; cursor: default; }
+.row .btn { padding: 6px 12px; font-size: 13px; flex: none; }
+
 /* Calculatrice */
 .calc { max-width: 360px; margin: 10px auto 0; }
 .calc .screen { text-align: right; font-size: 64px; font-weight: 300; padding: 10px 8px; font-variant-numeric: tabular-nums; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
@@ -277,7 +290,7 @@ details.rule ol { margin: 0 0 16px; padding-left: 22px; display: flex; flex-dire
    CONTENU DE L'INTRANET : modifie ce bloc pour mettre tes propres infos.
    Tout ce qui est marqué "exemple: true" est du contenu d'exemple.
    ===================================================================== */
-const INTRANET = {
+const DEFAUT = {
   serveur: "Nova",
   ville: "Amboise",
   discord: "https://discord.gg/ton-invitation",
@@ -326,6 +339,8 @@ const INTRANET = {
     { nom: "Discord du serveur", url: "https://discord.gg/ton-invitation", description: "Annonces, candidatures et support." },
   ],
 };
+// Contenu affiché : les valeurs ci-dessus, remplacées par ce que le staff enregistre depuis l'app Staff
+const INTRANET = structuredClone(DEFAUT);
 
 /* =====================================================================
    ICÔNES DES APPS (dessinées en SVG, pas d'images externes)
@@ -341,6 +356,7 @@ const GLYPHS = {
   notes: S('<rect x="4.5" y="3.5" width="15" height="17" rx="2.5" fill="rgba(255,255,255,.25)"/><path d="M8 8.5h8M8 12h8M8 15.5h5"/>'),
   reglages: S('<circle cx="12" cy="12" r="3"/><path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M5.5 18.5l1.7-1.7M16.8 7.2l1.7-1.7"/>', 'stroke-width="2"'),
   liens: S('<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>', 'stroke-width="2.2"'),
+  staff: S('<rect x="5" y="10.5" width="14" height="10" rx="2.5" fill="rgba(255,255,255,.22)"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/><circle cx="12" cy="15.5" r="1.3" fill="#fff"/>', 'stroke-width="2"'),
   support: S('<circle cx="12" cy="12" r="8.5" fill="rgba(255,255,255,.2)"/><path d="M9.6 9.4a2.5 2.5 0 0 1 4.8 1c0 1.7-2.4 2.1-2.4 3.6"/><circle cx="12" cy="17" r=".7" fill="#fff"/>', 'stroke-width="2"'),
 };
 
@@ -356,9 +372,10 @@ const APPS = [
   { id: "calculatrice", nom: "Calculatrice", bg: "linear-gradient(160deg,#4b4b4f,#1d1d20)" },
   { id: "notes", nom: "Notes", bg: "linear-gradient(160deg,#ffe066,#f5b700)" },
   { id: "reglages", nom: "Réglages", bg: "linear-gradient(160deg,#a3a7b3,#62666f)" },
+  { id: "staff", nom: "Staff", bg: "linear-gradient(160deg,#3b3f58,#14162a)" },
 ];
 const PAGE1 = ["entreprises", "emplois", "calendrier", "reglement", "support", "liens"];
-const PAGE2 = ["calculatrice", "annuaire", "actualites"];
+const PAGE2 = ["calculatrice", "annuaire", "actualites", "staff"];
 const DOCK = ["actualites", "annuaire", "notes", "reglages"];
 
 /* =====================================================================
@@ -553,7 +570,7 @@ function renderApp(id) {
   ({
     actualites: appActualites, annuaire: appAnnuaire, entreprises: appEntreprises, emplois: appEmplois,
     calendrier: appCalendrier, reglement: appReglement, support: appSupport, liens: appLiens,
-    calculatrice: appCalculatrice, notes: appNotes, reglages: appReglages,
+    calculatrice: appCalculatrice, notes: appNotes, reglages: appReglages, staff: appStaff,
   })[id]();
 }
 
@@ -682,6 +699,202 @@ function appReglages() {
 }
 
 /* =====================================================================
+   ESPACE STAFF (nécessite le serveur server.js)
+   ===================================================================== */
+const SCHEMA = {
+  general: { nom: "Général", objet: true, champs: [["serveur", "Nom du serveur"], ["ville", "Ville"], ["discord", "Lien Discord (https://…)"]] },
+  actualites: { nom: "Actualités", titre: (e) => e.titre, champs: [["titre", "Titre"], ["date", "Date", "date"], ["auteur", "Auteur"], ["texte", "Texte", "textarea"]] },
+  evenements: { nom: "Calendrier", titre: (e) => e.titre, champs: [["titre", "Titre"], ["date", "Date", "date"], ["heure", "Heure", "time"], ["lieu", "Lieu"]] },
+  entreprises: { nom: "Entreprises", titre: (e) => e.nom, champs: [["nom", "Nom"], ["secteur", "Secteur"], ["statut", "Statut", "select", ["Recrute", "Ouvert", "Fermé"]], ["patron", "Gérant(e)"], ["tel", "Téléphone"], ["description", "Description", "textarea"]] },
+  emplois: { nom: "Emplois", titre: (e) => e.poste, champs: [["poste", "Poste"], ["entreprise", "Entreprise"], ["salaire", "Salaire"], ["details", "Détails", "textarea"]] },
+  annuaire: { nom: "Annuaire", titre: (e) => e.nom, champs: [["nom", "Nom"], ["role", "Fonction"], ["entreprise", "Entreprise"], ["tel", "Téléphone"]] },
+  reglement: { nom: "Règlement", titre: (e) => e.titre, champs: [["titre", "Titre de la partie"], ["regles", "Règles (une par ligne)", "lignes"]] },
+  liens: { nom: "Liens", titre: (e) => e.nom, champs: [["nom", "Nom"], ["url", "Adresse (https://…)"], ["description", "Description"]] },
+};
+
+let session = (() => { try { return JSON.parse(sessionStorage.getItem("intranet.session")); } catch { return null; } })();
+const sauverSession = () => { try { session ? sessionStorage.setItem("intranet.session", JSON.stringify(session)) : sessionStorage.removeItem("intranet.session"); } catch {} };
+
+async function api(methode, chemin, donnees) {
+  let r;
+  try {
+    r = await fetch("api/" + chemin, {
+      method: methode,
+      headers: { "Content-Type": "application/json", ...(session ? { Authorization: "Bearer " + session.jeton } : {}) },
+      body: donnees === undefined ? undefined : JSON.stringify(donnees),
+    });
+  } catch {
+    throw new Error("Serveur de l'intranet injoignable. L'espace staff ne marche que si le site est lancé avec server.js.");
+  }
+  const j = await r.json().catch(() => ({}));
+  if (r.status === 401 && chemin !== "connexion") { session = null; sauverSession(); }
+  if (!r.ok) throw new Error(j.erreur || "Le serveur a refusé la demande.");
+  return j;
+}
+
+const champHtml = ([k, label, type, options], valeur) => {
+  const id = `f-${k}`;
+  let input;
+  if (type === "textarea" || type === "lignes") input = `<textarea id="${id}" rows="${type === "lignes" ? 6 : 4}">${esc(type === "lignes" ? (valeur || []).join("\n") : valeur)}</textarea>`;
+  else if (type === "select") input = `<select id="${id}">${options.map((o) => `<option${o === valeur ? " selected" : ""}>${esc(o)}</option>`).join("")}</select>`;
+  else input = `<input id="${id}" type="${type || "text"}" value="${esc(valeur)}">`;
+  return `<label class="field" for="${id}"><span>${esc(label)}</span>${input}</label>`;
+};
+const lireChamps = (champs) => Object.fromEntries(champs.map(([k, , type]) => {
+  const v = document.getElementById(`f-${k}`).value;
+  return [k, type === "lignes" ? v.split("\n").map((l) => l.trim()).filter(Boolean) : v.trim()];
+}));
+const message = (texte, ok) => { const m = $("#staff-msg"); if (m) { m.textContent = texte; m.className = "msg " + (ok ? "ok" : "ko"); } };
+const sansExemple = (liste) => (liste || []).map(({ exemple, ...reste }) => reste);
+async function avecMessage(bouton, action) {
+  const connecte = !!session;
+  if (bouton) bouton.disabled = true;
+  // Si la session a expiré pendant l'action, on renvoie vers l'écran de connexion
+  try { await action(); } catch (e) { message(e.message, false); if (connecte && !session) setTimeout(appStaff, 1200); } finally { if (bouton) bouton.disabled = false; }
+}
+
+function appStaff() {
+  if (session) return staffAccueil();
+  setView(`<form class="detail form" id="login" style="max-width:420px;margin:30px auto 0">
+      <h2>Espace staff</h2><p class="meta" style="margin:0">Connecte-toi pour gérer le contenu de la tablette.</p>
+      <label class="field" for="login-id"><span>Identifiant</span><input id="login-id" autocomplete="username" required></label>
+      <label class="field" for="login-mdp"><span>Mot de passe</span><input id="login-mdp" type="password" autocomplete="current-password" required></label>
+      <p class="msg" id="staff-msg"></p>
+      <button class="btn" type="submit">Se connecter</button>
+    </form>`);
+  $("#login").onsubmit = (e) => {
+    e.preventDefault();
+    avecMessage(e.submitter || $("#login button"), async () => {
+      session = await api("POST", "connexion", { identifiant: $("#login-id").value.trim(), mdp: $("#login-mdp").value });
+      sauverSession(); staffAccueil();
+    });
+  };
+}
+
+function staffAccueil() {
+  const c = session.compte;
+  setView(`<div class="detail" style="display:flex;align-items:center;gap:14px;flex-wrap:wrap"><span class="avatar" style="background:${couleur(c.nom)}">${esc(initiales(c.nom))}</span><div class="grow" style="flex:1;min-width:0"><strong>${esc(c.nom)}</strong><div class="meta">${esc(c.identifiant)} · ${c.role === "admin" ? "Administrateur" : "Staff"}</div></div><button class="btn ghost" type="button" id="logout">Se déconnecter</button></div>
+    <div class="section-title" style="margin-top:24px">Contenu de la tablette</div>
+    <div class="list">${Object.entries(SCHEMA).map(([k, s]) => `<button class="row" type="button" data-sec="${k}"><span class="grow"><strong>${esc(s.nom)}</strong></span><span class="end">${s.objet ? "" : `${(INTRANET[k] || []).length} élément(s)`} ›</span></button>`).join("")}</div>
+    <div class="section-title">Comptes</div>
+    <div class="list"><button class="row" type="button" id="go-comptes"><span class="grow"><strong>Comptes staff</strong><small>${c.role === "admin" ? "Créer, modifier et supprimer des comptes" : "Voir les comptes"}</small></span><span class="end">›</span></button>
+    <button class="row" type="button" id="go-mdp"><span class="grow"><strong>Mon profil et mot de passe</strong></span><span class="end">›</span></button></div>`);
+  $("#app-body").querySelectorAll("[data-sec]").forEach((b) => (b.onclick = () => staffSection(b.dataset.sec)));
+  $("#go-comptes").onclick = staffComptes;
+  $("#go-mdp").onclick = staffMonProfil;
+  $("#logout").onclick = async () => { try { await api("POST", "deconnexion"); } catch {} session = null; sauverSession(); appStaff(); };
+}
+
+async function enregistrerSection(k, valeur) {
+  const res = await api("PUT", "contenu/" + k, { valeur });
+  appliquerContenu(res);
+}
+
+function staffSection(k) {
+  const s = SCHEMA[k];
+  if (s.objet) {
+    setView(`<form class="detail form" id="sec-form"><h2>${esc(s.nom)}</h2>${s.champs.map((f) => champHtml(f, INTRANET[f[0]])).join("")}<p class="msg" id="staff-msg"></p><button class="btn" type="submit">Enregistrer</button></form>`, { back: staffAccueil });
+    $("#sec-form").onsubmit = (e) => { e.preventDefault(); avecMessage(e.submitter, async () => { await enregistrerSection(k, lireChamps(s.champs)); message("Enregistré. La tablette est à jour pour tout le monde.", true); }); };
+    return;
+  }
+  const liste = INTRANET[k] || [];
+  setView(`<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap"><h2 style="margin:0;font-size:22px">${esc(s.nom)}</h2><button class="btn" type="button" id="add">Ajouter</button></div>
+    <p class="msg" id="staff-msg"></p>
+    ${liste.length ? `<div class="list">${liste.map((e, i) => `<div class="row"><span class="grow"><strong>${esc(s.titre(e) || "(sans titre)")}${tagExemple(e)}</strong></span><button class="btn ghost" type="button" data-edit="${i}">Modifier</button><button class="btn danger" type="button" data-del="${i}">Supprimer</button></div>`).join("")}</div>` : `<p class="empty">Rien pour le moment. Clique sur « Ajouter ».</p>`}`, { back: staffAccueil });
+  $("#add").onclick = () => staffElement(k, null);
+  $("#app-body").querySelectorAll("[data-edit]").forEach((b) => (b.onclick = () => staffElement(k, Number(b.dataset.edit))));
+  $("#app-body").querySelectorAll("[data-del]").forEach((b) => (b.onclick = () => {
+    if (b.dataset.confirm !== "1") { b.dataset.confirm = "1"; b.textContent = "Confirmer"; return; }
+    avecMessage(b, async () => { const copie = sansExemple(INTRANET[k]); copie.splice(Number(b.dataset.del), 1); await enregistrerSection(k, copie); staffSection(k); message("Élément supprimé.", true); });
+  }));
+}
+
+function staffElement(k, index) {
+  const s = SCHEMA[k];
+  const el = index == null ? {} : INTRANET[k][index];
+  setView(`<form class="detail form" id="el-form"><h2>${index == null ? "Ajouter" : "Modifier"} · ${esc(s.nom)}</h2>${s.champs.map((f) => champHtml(f, el[f[0]])).join("")}<p class="msg" id="staff-msg"></p><button class="btn" type="submit">Enregistrer</button></form>`, { back: () => staffSection(k) });
+  $("#el-form").onsubmit = (e) => {
+    e.preventDefault();
+    avecMessage(e.submitter, async () => {
+      const copie = sansExemple(INTRANET[k]);
+      const nouveau = lireChamps(s.champs);
+      if (index == null) copie.unshift(nouveau); else copie[index] = nouveau;
+      await enregistrerSection(k, copie);
+      staffSection(k); message("Enregistré. La tablette est à jour pour tout le monde.", true);
+    });
+  };
+}
+
+async function staffComptes() {
+  setView(`<p class="empty">Chargement des comptes…</p>`, { back: staffAccueil });
+  let comptes;
+  try { comptes = await api("GET", "staff"); } catch (e) { setView(`<p class="msg ko" id="staff-msg">${esc(e.message)}</p>`, { back: staffAccueil }); return; }
+  const admin = session.compte.role === "admin";
+  setView(`<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap"><h2 style="margin:0;font-size:22px">Comptes staff</h2>${admin ? '<button class="btn" type="button" id="new-acc">Nouveau compte</button>' : ""}</div>
+    <p class="msg" id="staff-msg"></p>
+    <div class="list">${comptes.map((c) => `<div class="row"><span class="avatar" style="background:${couleur(c.nom)}">${esc(initiales(c.nom))}</span><span class="grow"><strong>${esc(c.nom)}</strong><small>${esc(c.identifiant)}</small></span><span class="pill ${c.role === "admin" ? "orange" : "grey"}">${c.role === "admin" ? "Admin" : "Staff"}</span>${admin && c.id !== session.compte.id ? `<button class="btn ghost" type="button" data-edit="${c.id}">Modifier</button><button class="btn danger" type="button" data-del="${c.id}">Supprimer</button>` : ""}</div>`).join("")}</div>`, { back: staffAccueil });
+  if (!admin) return;
+  $("#new-acc").onclick = () => staffCompteForm(null);
+  $("#app-body").querySelectorAll("[data-edit]").forEach((b) => (b.onclick = () => staffCompteForm(comptes.find((c) => c.id === b.dataset.edit))));
+  $("#app-body").querySelectorAll("[data-del]").forEach((b) => (b.onclick = () => {
+    if (b.dataset.confirm !== "1") { b.dataset.confirm = "1"; b.textContent = "Confirmer"; return; }
+    avecMessage(b, async () => { await api("DELETE", "staff/" + b.dataset.del); await staffComptes(); message("Compte supprimé.", true); });
+  }));
+}
+
+function staffCompteForm(c) {
+  const nouveau = !c;
+  setView(`<form class="detail form" id="acc-form"><h2>${nouveau ? "Nouveau compte staff" : "Modifier " + esc(c.identifiant)}</h2>
+    ${nouveau ? `<label class="field" for="acc-id"><span>Identifiant de connexion</span><input id="acc-id" required autocomplete="off"></label>` : ""}
+    <label class="field" for="acc-nom"><span>Nom affiché</span><input id="acc-nom" value="${esc(c?.nom)}"></label>
+    <label class="field" for="acc-role"><span>Rôle</span><select id="acc-role"><option value="staff"${c?.role !== "admin" ? " selected" : ""}>Staff : modifie le contenu</option><option value="admin"${c?.role === "admin" ? " selected" : ""}>Admin : modifie le contenu et gère les comptes</option></select></label>
+    <label class="field" for="acc-mdp"><span>${nouveau ? "Mot de passe (8 caractères minimum)" : "Nouveau mot de passe (laisser vide pour ne pas changer)"}</span><input id="acc-mdp" type="password" autocomplete="new-password"${nouveau ? " required" : ""}></label>
+    <p class="msg" id="staff-msg"></p><button class="btn" type="submit">${nouveau ? "Créer le compte" : "Enregistrer"}</button></form>`, { back: staffComptes });
+  $("#acc-form").onsubmit = (e) => {
+    e.preventDefault();
+    avecMessage(e.submitter, async () => {
+      const donnees = { nom: $("#acc-nom").value.trim(), role: $("#acc-role").value };
+      const mdp = $("#acc-mdp").value; if (mdp) donnees.mdp = mdp;
+      if (nouveau) await api("POST", "staff", { ...donnees, identifiant: $("#acc-id").value.trim() });
+      else await api("PUT", "staff/" + c.id, donnees);
+      await staffComptes(); message(nouveau ? "Compte créé." : "Compte modifié.", true);
+    });
+  };
+}
+
+function staffMonProfil() {
+  const c = session.compte;
+  setView(`<form class="detail form" id="me-form"><h2>Mon profil</h2>
+    <label class="field" for="me-nom"><span>Nom affiché</span><input id="me-nom" value="${esc(c.nom)}"></label>
+    <label class="field" for="me-mdp"><span>Nouveau mot de passe (laisser vide pour ne pas changer)</span><input id="me-mdp" type="password" autocomplete="new-password"></label>
+    <label class="field" for="me-mdp2"><span>Confirmer le nouveau mot de passe</span><input id="me-mdp2" type="password" autocomplete="new-password"></label>
+    <p class="msg" id="staff-msg"></p><button class="btn" type="submit">Enregistrer</button></form>`, { back: staffAccueil });
+  $("#me-form").onsubmit = (e) => {
+    e.preventDefault();
+    avecMessage(e.submitter, async () => {
+      const mdp = $("#me-mdp").value;
+      if (mdp !== $("#me-mdp2").value) throw new Error("Les deux mots de passe ne sont pas identiques.");
+      const donnees = { nom: $("#me-nom").value.trim() }; if (mdp) donnees.mdp = mdp;
+      session.compte = await api("PUT", "staff/" + c.id, donnees); sauverSession();
+      $("#me-mdp").value = $("#me-mdp2").value = "";
+      message("Profil enregistré.", true);
+    });
+  };
+}
+
+/* Contenu enregistré par le staff sur le serveur : remplace les valeurs par défaut */
+function appliquerContenu(distant) {
+  if (!distant || typeof distant !== "object") return;
+  const { general, ...sections } = distant;
+  if (general) Object.assign(INTRANET, general);
+  for (const [k, v] of Object.entries(sections)) if (Array.isArray(v)) INTRANET[k] = v;
+  renderHome();
+}
+async function chargerContenu() {
+  try { const r = await fetch("api/contenu", { cache: "no-store" }); if (r.ok) appliquerContenu(await r.json()); } catch {}
+}
+
+/* =====================================================================
    RECHERCHE (comme Spotlight)
    ===================================================================== */
 const spot = $("#spot");
@@ -713,6 +926,7 @@ document.addEventListener("keydown", (e) => {
 
 appliquerFond(store.get("fond", "violet"));
 renderHome();
+chargerContenu();
 setInterval(tick, 10000);
 </script>
 </body>

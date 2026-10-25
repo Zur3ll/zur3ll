@@ -1,0 +1,12 @@
+{
+  "name": "intranet-nova",
+  "version": "1.0.0",
+  "description": "Intranet de la tablette du serveur Nova-Life, avec espace staff.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
