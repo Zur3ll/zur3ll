@@ -1,0 +1,18 @@
+Options -Indexes
+RewriteEngine On
+
+# neoran.fr et www.neoran.fr -> serveur Discord (redirection temporaire, 302)
+RewriteCond %{HTTP_HOST} ^(www\.)?neoran\.fr(:\d+)?$ [NC]
+RewriteRule ^ https://discord.gg/nfbUK8WKQS [R=302,L]
+
+# Transmet l'en-tête Authorization à PHP (nécessaire sur certaines configurations Apache)
+RewriteCond %{HTTP:Authorization} .
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+# Routes de l'API : /api/<route> -> api.php?route=<route>
+RewriteRule ^api/(.*)$ api.php?route=$1 [QSA,L]
+
+# Fichiers cachés (.env, .gitignore, ...) : jamais accessibles par URL
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>

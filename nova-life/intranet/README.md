@@ -1,10 +1,25 @@
 # Intranet Nova
 
 Site de la tablette en jeu (navigateur Blue Lightfox), dans le style d'un iPad.
+Version PHP : elle tourne sur un hébergement Web classique (Apache + PHP), sans processus à lancer.
+
+## Fichiers
 
 - `index.html` : la page de la tablette.
-- `server.js` : un petit serveur Node.js (aucune dépendance) qui sert la page, enregistre le contenu modifié par le staff et gère les comptes staff.
-- `data/` : créé au premier lancement, contient `contenu.json` et `staff.json` (mots de passe chiffrés). À sauvegarder, ne pas partager.
+- `api.php` : l'API (contenu, comptes staff, connexion). Remplace l'ancien `server.js`.
+- `.htaccess` : redirige `/api/...` vers `api.php` et bloque l'accès aux fichiers cachés.
+- `.env` : configuration secrète (mot de passe admin). À créer à partir de `.env.example`. Ne pas partager.
+- `data/` : créé automatiquement, contient le contenu et les comptes staff. Protégé par `data/.htaccess`. À sauvegarder, ne pas partager.
+- `DEPLOIEMENT-INFOMANIAK.md` : étapes de mise en ligne.
+
+## Configuration (.env)
+
+1. Copie `.env.example` en `.env`.
+2. Remplace `ADMIN_MDP` par ton mot de passe (8 caractères minimum).
+
+Le compte `admin` (ou `ADMIN_IDENTIFIANT`) est créé au premier appel avec ce mot de passe.
+Si tu changes `ADMIN_MDP` dans `.env`, le nouveau mot de passe remplace l'ancien dès la première connexion avec lui.
+Si tu changes le mot de passe depuis l'app Staff, il reste en place tant que personne ne se connecte avec la valeur du `.env`.
 
 ## Modifier le contenu
 
@@ -37,26 +52,15 @@ Les éléments marqués `exemple: true` sont des exemples et affichent une étiq
 
 L'app **Staff** (page 2 de l'accueil) demande un identifiant et un mot de passe.
 
-- **Premier lancement :** `server.js` crée le compte `admin` et affiche son mot de passe **une seule fois** dans la console. Connecte-toi et change-le dans « Mon profil et mot de passe ».
+- **Compte admin :** identifiant `admin` (ou `ADMIN_IDENTIFIANT`), mot de passe = `ADMIN_MDP` du fichier `.env`.
 - **Rôle Staff :** modifie tout le contenu de la tablette (général, actualités, calendrier, entreprises, emplois, annuaire, règlement, liens) et son propre mot de passe.
 - **Rôle Admin :** pareil, plus la création, la modification et la suppression des comptes staff. Il reste toujours au moins un admin.
 - Après 5 mauvais mots de passe, la connexion est bloquée 5 minutes pour cette adresse IP.
-- La console du serveur note qui modifie quoi.
-
-## Lancer le serveur
-
-Il faut Node.js 18 ou plus. Dans le dossier `intranet` :
-
-```bash
-node server.js
-```
-
-Le site est alors sur `http://localhost:3000`. Pour un autre port, définis la variable d'environnement `PORT`.
-
-Si tu ouvres `index.html` directement sans le serveur, la tablette marche avec le contenu par défaut, mais l'app Staff indique que le serveur est injoignable.
+- Le journal d'erreurs du site (Apache / PHP) note qui modifie quoi.
 
 ## Mettre en ligne
 
-1. Héberge le dossier `intranet` chez un hébergeur qui fait tourner Node.js (un hébergement « bot Discord / Node.js » suffit, par exemple chez OxygenServ), avec `npm start` comme commande de démarrage. Un hébergement de site statique seul (GitHub Pages…) ne suffit plus pour l'espace staff. Utilise une adresse en `https://` pour que les mots de passe ne circulent pas en clair.
-2. En jeu : panel admin → **CONFIG** → **Configurer liens favoris**, puis ajoute l'adresse du site.
-3. Optionnel : mets la même adresse dans `"tabletUrl"` du `config.json` du serveur pour que le navigateur s'ouvre directement dessus.
+Voir `DEPLOIEMENT-INFOMANIAK.md`.
+
+En jeu : panel admin → **CONFIG** → **Configurer liens favoris**, puis ajoute l'adresse du site.
+Optionnel : mets la même adresse dans `"tabletUrl"` du `config.json` du serveur de jeu.
