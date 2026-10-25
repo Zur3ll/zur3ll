@@ -186,6 +186,7 @@ details.rule ol { margin: 0 0 16px; padding-left: 22px; display: flex; flex-dire
 
 /* Notes */
 .notes { display: grid; grid-template-columns: minmax(0, 260px) minmax(0, 1fr); gap: 20px; height: 100%; }
+.note-etat { margin: 0 0 12px; color: var(--ink-soft); font-size: 13px; }
 .notes textarea { width: 100%; min-height: 320px; height: 100%; resize: none; background: var(--app-panel); border: 0; border-radius: 14px; padding: 18px; line-height: 1.6; outline: none; }
 .btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px; border-radius: 11px; background: var(--accent); color: #fff; font-weight: 600; }
 .btn.ghost { background: rgba(255, 255, 255, .08); color: var(--ink); }
@@ -730,16 +731,32 @@ function appCalculatrice() {
   $("#app-body").querySelectorAll("[data-k]").forEach((b) => (b.onclick = () => press(b.dataset.k)));
 }
 
+// Connecté : les notes sont enregistrées dans le compte Neoran. Sinon : dans le navigateur de ce PC.
 function appNotes() {
-  let notes = store.get("notes", [{ id: 1, texte: "Mes notes\nCette note reste enregistrée dans le navigateur de la tablette." }]);
+  const enCompte = !!session;
+  const locales = store.get("notes", []).filter((n) => n.id !== 1); // sans la note d'exemple
+  let notes = enCompte ? structuredClone(session.compte.notes || []) : (store.get("notes", []).length ? store.get("notes", []) : [{ id: 1, texte: "Mes notes\nConnecte-toi dans Réglages pour retrouver tes notes sur n'importe quelle tablette." }]);
   let sel = notes[0]?.id ?? null;
-  const save = () => store.set("notes", notes);
+  let minuteur = null;
+  const etat = (t) => { const e = $("#note-etat"); if (e) e.textContent = t; };
+  const save = () => {
+    if (!enCompte) return store.set("notes", notes);
+    etat("Enregistrement…");
+    clearTimeout(minuteur);
+    minuteur = setTimeout(async () => {
+      try { session.compte = await api("PUT", "moi", { notes }); sauverSession(); etat("Enregistré dans ton compte"); }
+      catch (e) { etat(e.message); }
+    }, 800);
+  };
   const titre = (n) => (n.texte.split("\n")[0] || "Nouvelle note").slice(0, 40);
+  const importables = enCompte && !notes.length && locales.some((n) => n.texte.trim());
   const draw = () => {
     const n = notes.find((x) => x.id === sel);
-    setView(`<div class="notes"><div><div style="display:flex;gap:8px;margin-bottom:12px"><button class="btn" type="button" id="note-new">Nouvelle note</button>${n ? '<button class="btn danger" type="button" id="note-del">Supprimer</button>' : ""}</div><div class="list">${notes.map((x) => `<button class="row" type="button" data-id="${x.id}" style="${x.id === sel ? "background:rgba(255,224,102,.12)" : ""}"><span class="grow"><strong>${esc(titre(x))}</strong></span></button>`).join("") || '<p class="empty">Aucune note.</p>'}</div></div>${n ? `<textarea id="note-text" aria-label="Contenu de la note">${esc(n.texte)}</textarea>` : '<p class="empty">Crée une note pour commencer.</p>'}</div>`);
-    $("#note-new").onclick = () => { const id = Date.now(); notes.unshift({ id, texte: "" }); sel = id; save(); draw(); $("#note-text").focus(); };
+    setView(`<p class="meta note-etat" id="note-etat">${enCompte ? "Enregistré dans ton compte" : "Enregistré sur ce PC uniquement. Connecte-toi dans Réglages pour garder tes notes partout."}</p>
+      <div class="notes"><div><div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap"><button class="btn" type="button" id="note-new">Nouvelle note</button>${n ? '<button class="btn danger" type="button" id="note-del">Supprimer</button>' : ""}${importables ? '<button class="btn ghost" type="button" id="note-import">Importer les notes de ce PC</button>' : ""}</div><div class="list">${notes.map((x) => `<button class="row" type="button" data-id="${x.id}" style="${x.id === sel ? "background:rgba(255,224,102,.12)" : ""}"><span class="grow"><strong>${esc(titre(x))}</strong></span></button>`).join("") || '<p class="empty">Aucune note.</p>'}</div></div>${n ? `<textarea id="note-text" aria-label="Contenu de la note">${esc(n.texte)}</textarea>` : '<p class="empty">Crée une note pour commencer.</p>'}</div>`);
+    $("#note-new").onclick = () => { if (notes.length >= 100) return etat("100 notes maximum."); const id = Date.now(); notes.unshift({ id, texte: "" }); sel = id; save(); draw(); $("#note-text").focus(); };
     const del = $("#note-del"); if (del) del.onclick = () => { notes = notes.filter((x) => x.id !== sel); sel = notes[0]?.id ?? null; save(); draw(); };
+    const imp = $("#note-import"); if (imp) imp.onclick = () => { notes = locales.filter((x) => x.texte.trim()).slice(0, 100); sel = notes[0]?.id ?? null; save(); draw(); };
     $("#app-body").querySelectorAll("[data-id]").forEach((b) => (b.onclick = () => { sel = Number(b.dataset.id); draw(); }));
     const ta = $("#note-text"); if (ta) ta.oninput = () => { n.texte = ta.value; save(); const r = $(`[data-id="${n.id}"] strong`); if (r) r.textContent = titre(n); };
   };
@@ -757,6 +774,8 @@ function appliquerFond(k) {
   const r = document.documentElement.style;
   r.setProperty("--w1", f.w1); r.setProperty("--w2", f.w2); r.setProperty("--w3", f.w3);
 }
+// Le fond d'écran suit le compte quand on est connecté
+const fondActuel = () => session?.compte?.fond || store.get("fond", "violet");
 
 /* =====================================================================
    COMPTE NEORAN (session partagée par Réglages, Gestion entreprise et Staff)
@@ -787,6 +806,7 @@ async function api(methode, chemin, donnees) {
 async function rafraichirCompte() {
   if (!session) return;
   try { session.compte = await api("GET", "moi"); sauverSession(); } catch {}
+  appliquerFond(fondActuel());
 }
 
 const message = (texte, ok) => { const m = $("#staff-msg"); if (m) { m.textContent = texte; m.className = "msg " + (ok ? "ok" : "ko"); } };
@@ -821,7 +841,7 @@ function formConnexion(apres, mode = "connexion") {
           const donnees = { identifiant: $("#auth-id").value.trim(), mdp: $("#auth-mdp").value };
           if (insc) Object.assign(donnees, { nom: $("#auth-nom").value.trim(), telephone: $("#auth-tel").value.trim() });
           session = await api("POST", insc ? "inscription" : "connexion", donnees);
-          sauverSession(); apres();
+          sauverSession(); appliquerFond(fondActuel()); apres();
         });
       };
     },
@@ -883,7 +903,7 @@ function reglageCompte(zone) {
     session.compte = await api("PUT", "moi", { ancienMdp: $("#mdp-old").value, mdp: $("#mdp-new").value }); sauverSession();
     e.target.reset(); message("Mot de passe changé.", true);
   }); };
-  $("#logout").onclick = async () => { try { await api("POST", "deconnexion"); } catch {} session = null; sauverSession(); appReglages(null); };
+  $("#logout").onclick = async () => { try { await api("POST", "deconnexion"); } catch {} session = null; sauverSession(); appliquerFond(fondActuel()); appReglages(null); };
 }
 
 async function reglageArgent(zone) {
@@ -895,9 +915,15 @@ async function reglageArgent(zone) {
 }
 
 function reglageFond(zone) {
-  const actuel = store.get("fond", "violet");
+  const actuel = fondActuel();
   zone.innerHTML = `<div class="section-title" style="margin-top:0">Fond d'écran</div><div class="list"><div class="walls">${Object.entries(FONDS).map(([k, f]) => `<button type="button" data-fond="${k}" class="${k === actuel ? "on" : ""}"><span class="sw" style="background:linear-gradient(135deg,${f.w1},${f.w2} 55%,${f.w3})"></span>${esc(f.nom)}</button>`).join("")}</div></div>`;
-  zone.querySelectorAll("[data-fond]").forEach((b) => (b.onclick = () => { store.set("fond", b.dataset.fond); appliquerFond(b.dataset.fond); reglageFond(zone); }));
+  zone.querySelectorAll("[data-fond]").forEach((b) => (b.onclick = async () => {
+    const k = b.dataset.fond;
+    appliquerFond(k);
+    if (session) { session.compte.fond = k; sauverSession(); try { session.compte = await api("PUT", "moi", { fond: k }); sauverSession(); } catch {} }
+    else store.set("fond", k);
+    reglageFond(zone);
+  }));
 }
 
 function reglageApropos(zone) {
@@ -954,7 +980,7 @@ function staffAccueil() {
   $("#go-comptes").onclick = staffComptes;
   $("#go-mdp").onclick = () => { current = "reglages"; $("#app-title").textContent = "Réglages"; appReglages("compte"); };
   $("#go-ent").onclick = () => { current = "gestion"; $("#app-title").textContent = "Gestion entreprise"; appGestion(); };
-  $("#logout").onclick = async () => { try { await api("POST", "deconnexion"); } catch {} session = null; sauverSession(); appStaff(); };
+  $("#logout").onclick = async () => { try { await api("POST", "deconnexion"); } catch {} session = null; sauverSession(); appliquerFond(fondActuel()); appStaff(); };
 }
 
 async function enregistrerSection(k, valeur) {
@@ -1285,7 +1311,7 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "ArrowLeft") goPage(page - 1);
 });
 
-appliquerFond(store.get("fond", "violet"));
+appliquerFond(fondActuel());
 renderHome();
 chargerContenu();
 rafraichirCompte();

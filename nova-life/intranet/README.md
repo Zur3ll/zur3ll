@@ -46,7 +46,7 @@ Les éléments marqués `exemple: true` sont des exemples et affichent une étiq
 - **Dock** en bas avec Actualités, Annuaire, Notes et Réglages.
 - **Apps** : elles s'ouvrent en plein écran avec une animation de zoom depuis l'icône. On les ferme avec la barre du bas (clic ou glissement vers le haut), le bouton ✕ ou Échap.
 - **Recherche** : cherche dans les apps, les contacts et les actualités.
-- **Notes et fond d'écran** : enregistrés dans le navigateur de chaque joueur.
+- **Notes et fond d'écran** : enregistrés dans le compte du joueur quand il est connecté, donc retrouvés sur n'importe quelle tablette. Sans compte, ils restent dans le navigateur du PC. À la première connexion, l'app Notes propose d'importer les notes du PC.
 
 ## Comptes Neoran (app Réglages)
 

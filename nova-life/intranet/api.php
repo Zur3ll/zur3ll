@@ -172,6 +172,8 @@ function detailCompte(array $c): array
         'telephone' => $c['telephone'] ?? '',
         'solde' => (int) ($c['solde'] ?? 0),
         'historique' => array_slice($c['historique'] ?? [], 0, 50),
+        'fond' => $c['fond'] ?? null,
+        'notes' => $c['notes'] ?? [],
     ];
 }
 
@@ -435,6 +437,25 @@ function modifierSoi(array $moi): void
     }
     if (array_key_exists('telephone', $corps)) {
         $c['telephone'] = texte($corps['telephone'], 20);
+    }
+    // Préférences qui suivent le joueur d'une tablette à l'autre
+    if (isset($corps['fond'])) {
+        if (!preg_match('/^[a-z]{1,20}$/D', (string) $corps['fond'])) {
+            throw new ApiErreur('Fond d\'écran inconnu.');
+        }
+        $c['fond'] = (string) $corps['fond'];
+    }
+    if (array_key_exists('notes', $corps)) {
+        if (!estListe($corps['notes'])) {
+            throw new ApiErreur('Liste de notes attendue.');
+        }
+        if (count($corps['notes']) > 100) {
+            throw new ApiErreur('100 notes maximum.');
+        }
+        $c['notes'] = array_map(fn($n) => [
+            'id' => is_array($n) && is_numeric($n['id'] ?? null) ? (int) $n['id'] : 0,
+            'texte' => texte(is_array($n) ? ($n['texte'] ?? '') : '', 10000),
+        ], $corps['notes']);
     }
     $staff[$idx] = $c;
     sauverStaff($staff);
