@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Intranet Nova</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<style>
+/* Écran d'iPad : fond d'écran en vagues, barre d'état, pages d'apps qui glissent, dock en verre, apps en plein écran */
+:root {
+  color-scheme: dark;
+  --w1: #22185e;          /* fond d'écran : base */
+  --w2: #4b2fb8;          /* fond d'écran : vague */
+  --w3: #7b5cf5;          /* fond d'écran : reflet */
+  --glass: rgba(30, 22, 72, .42);
+  --glass-line: rgba(255, 255, 255, .14);
+  --ink: #f5f3ff;
+  --ink-soft: rgba(245, 243, 255, .68);
+  --app-bg: #14121f;
+  --app-panel: #1f1c2e;
+  --app-line: rgba(255, 255, 255, .08);
+  --accent: #8b74ff;
+  --red: #ff5a5f;
+  --green: #34c77b;
+  --orange: #ff9f2e;
+  --font: "Inter", -apple-system, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { height: 100%; margin: 0; }
+body { background: var(--w1); color: var(--ink); font: 15px/1.45 var(--font); overflow: hidden; -webkit-font-smoothing: antialiased; user-select: none; }
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; padding: 0; }
+button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+input, textarea { font: inherit; color: inherit; user-select: text; }
+
+#ipad { position: relative; height: 100%; overflow: hidden; display: flex; flex-direction: column; }
+.wall { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; transition: opacity .4s; }
+
+/* Barre d'état */
+.status { position: relative; z-index: 2; display: flex; justify-content: space-between; align-items: center; padding: 8px max(20px, env(safe-area-inset-right, 0px)) 0 max(20px, env(safe-area-inset-left, 0px)); font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.status .left { display: flex; gap: 8px; align-items: center; }
+.status .right { display: flex; gap: 10px; align-items: center; }
+.status .live { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; }
+.status .live::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--green); }
+.badge { min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--red); font-size: 11px; font-weight: 700; display: inline-grid; place-items: center; }
+.battery { width: 26px; height: 12px; border: 1.5px solid var(--ink); border-radius: 4px; padding: 1.5px; position: relative; }
+.battery::after { content: ""; position: absolute; right: -4px; top: 3px; width: 2px; height: 4px; border-radius: 0 2px 2px 0; background: var(--ink); }
+.battery i { display: block; height: 100%; width: 85%; background: var(--ink); border-radius: 1.5px; }
+
+/* Écran d'accueil */
+.home { position: relative; z-index: 1; flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.pages { flex: 1; overflow: hidden; touch-action: pan-y; min-height: 0; }
+.track { display: flex; height: 100%; transition: transform .45s cubic-bezier(.2, .8, .2, 1); }
+.track.dragging { transition: none; }
+.page { flex: 0 0 100%; height: 100%; overflow-y: auto; padding: 22px max(36px, env(safe-area-inset-right, 0px)) 12px max(36px, env(safe-area-inset-left, 0px)); scrollbar-width: none; }
+.page::-webkit-scrollbar { display: none; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); grid-auto-rows: 118px; grid-auto-flow: row dense; gap: 18px 22px; max-width: 1320px; margin: 0 auto; }
+
+.icon { display: flex; flex-direction: column; align-items: center; gap: 8px; padding-top: 6px; }
+.icon .tile { width: 76px; height: 76px; border-radius: 22%; display: grid; place-items: center; box-shadow: 0 6px 16px rgba(0, 0, 0, .28), inset 0 1px 0 rgba(255, 255, 255, .35); transition: transform .15s, filter .15s; position: relative; overflow: hidden; }
+.icon .tile::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(255, 255, 255, .22), transparent 45%); }
+.icon .tile svg { width: 44px; height: 44px; position: relative; z-index: 1; }
+.icon:hover .tile { filter: brightness(1.08); }
+.icon:active .tile { transform: scale(.9); filter: brightness(.85); }
+.icon .label { font-size: 13px; font-weight: 600; text-shadow: 0 1px 3px rgba(0, 0, 0, .45); white-space: nowrap; max-width: 110px; overflow: hidden; text-overflow: ellipsis; }
+.icon .dot-badge { position: absolute; top: -4px; right: -4px; z-index: 2; }
+.icon .tile-wrap { position: relative; }
+
+.cal-tile { background: #fff; color: #111; display: flex !important; flex-direction: column; align-items: center; justify-content: center; line-height: 1; }
+.cal-tile b { color: var(--red); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; position: relative; z-index: 1; }
+.cal-tile span { font-size: 36px; font-weight: 400; position: relative; z-index: 1; margin-top: 2px; }
+
+/* Widgets */
+.widget { grid-column: span 2; grid-row: span 2; border-radius: 26px; padding: 20px 22px; background: var(--glass); border: 1px solid var(--glass-line); backdrop-filter: blur(22px) saturate(150%); -webkit-backdrop-filter: blur(22px) saturate(150%); display: flex; flex-direction: column; min-width: 0; overflow: hidden; text-align: left; }
+.widget.wide { grid-column: span 4; }
+.widget h3 { margin: 0; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; display: flex; align-items: center; gap: 6px; }
+.w-clock h3 { color: var(--red); }
+.w-clock .day { font-size: 54px; font-weight: 700; line-height: 1; margin-top: 4px; letter-spacing: -.02em; }
+.w-clock .month { font-weight: 600; font-size: 17px; }
+.w-clock .time { margin-top: auto; font-size: 30px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.w-clock .place { color: var(--ink-soft); font-size: 13px; display: flex; align-items: center; gap: 4px; }
+.w-event h3 { color: #4ee39a; }
+.w-event .title { font-size: 21px; font-weight: 700; line-height: 1.2; margin-top: 10px; text-wrap: balance; }
+.w-event .meta { color: var(--ink-soft); font-size: 13px; margin-top: 6px; }
+.w-event .when { margin-top: auto; display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; }
+.w-event .when::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--green); }
+.w-notifs h3 { color: #ffb648; }
+.w-notifs ul { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-direction: column; gap: 12px; min-height: 0; }
+.w-notifs li { display: flex; gap: 10px; align-items: flex-start; min-width: 0; }
+.w-notifs .mini { flex: 0 0 26px; height: 26px; border-radius: 7px; display: grid; place-items: center; }
+.w-notifs .mini svg { width: 16px; height: 16px; }
+.w-notifs strong { display: block; font-size: 14px; }
+.w-notifs small { display: block; color: var(--ink-soft); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.w-notifs li > div { min-width: 0; }
+
+.dots { display: flex; justify-content: center; gap: 8px; padding: 6px 0; }
+.dots button { width: 7px; height: 7px; border-radius: 50%; background: rgba(255, 255, 255, .35); transition: background .2s; }
+.dots button.on { background: #fff; }
+.dots-wrap { display: flex; flex-direction: column; align-items: center; gap: 8px; padding-bottom: 10px; }
+.search-pill { display: inline-flex; align-items: center; gap: 8px; padding: 7px 16px; border-radius: 20px; background: var(--glass); border: 1px solid var(--glass-line); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); font-weight: 600; font-size: 14px; }
+.search-pill svg { width: 15px; height: 15px; }
+
+.dock { position: relative; z-index: 1; align-self: center; display: flex; gap: 18px; padding: 12px 16px; margin-bottom: max(14px, env(safe-area-inset-bottom, 0px)); border-radius: 30px; background: rgba(255, 255, 255, .16); border: 1px solid var(--glass-line); backdrop-filter: blur(26px) saturate(160%); -webkit-backdrop-filter: blur(26px) saturate(160%); }
+.dock .icon { padding: 0; }
+.dock .icon .tile { width: 68px; height: 68px; }
+.dock .icon .tile svg { width: 40px; height: 40px; }
+.dock .icon .label { display: none; }
+
+/* Fenêtre d'app */
+.app { position: absolute; inset: 0; z-index: 20; background: var(--app-bg); display: flex; flex-direction: column; border-radius: 0; overflow: hidden; transform-origin: top left; will-change: transform; }
+.app.anim { transition: transform .38s cubic-bezier(.2, .85, .25, 1), border-radius .38s, opacity .3s; }
+.app-bar { display: flex; align-items: center; gap: 12px; padding: 12px max(20px, env(safe-area-inset-right, 0px)) 12px max(20px, env(safe-area-inset-left, 0px)); border-bottom: 1px solid var(--app-line); min-height: 56px; }
+.app-bar h1 { margin: 0; font-size: 19px; font-weight: 700; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.app-bar .back { color: var(--accent); font-weight: 600; display: inline-flex; align-items: center; gap: 2px; }
+.app-bar .back svg { width: 20px; height: 20px; }
+.app-bar .close { width: 30px; height: 30px; border-radius: 50%; background: rgba(255, 255, 255, .1); display: grid; place-items: center; }
+.app-bar .close svg { width: 14px; height: 14px; }
+.app-body { flex: 1; overflow-y: auto; min-height: 0; user-select: text; }
+.app-inner { max-width: 980px; margin: 0 auto; padding: 22px max(20px, env(safe-area-inset-right, 0px)) 60px max(20px, env(safe-area-inset-left, 0px)); }
+.home-bar { position: absolute; left: 50%; bottom: max(8px, env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); width: 140px; height: 22px; display: grid; place-items: center; z-index: 3; cursor: grab; }
+.home-bar::before { content: ""; width: 140px; height: 5px; border-radius: 3px; background: rgba(255, 255, 255, .55); }
+
+/* Composants d'app */
+.search-field { display: flex; align-items: center; gap: 8px; padding: 9px 12px; border-radius: 11px; background: rgba(255, 255, 255, .08); margin-bottom: 18px; }
+.search-field svg { width: 16px; height: 16px; opacity: .6; flex: none; }
+.search-field input { flex: 1; min-width: 0; background: none; border: 0; outline: none; }
+.list { background: var(--app-panel); border-radius: 14px; overflow: hidden; }
+.list > * + * { border-top: 1px solid var(--app-line); }
+.row { display: flex; align-items: center; gap: 14px; padding: 13px 16px; width: 100%; text-align: left; min-width: 0; }
+button.row:hover { background: rgba(255, 255, 255, .04); }
+.row .grow { flex: 1; min-width: 0; }
+.row strong { display: block; font-weight: 600; }
+.row small { display: block; color: var(--ink-soft); font-size: 13px; }
+.row .end { color: var(--ink-soft); font-size: 13px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.avatar { flex: none; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 15px; color: #fff; }
+.section-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-soft); margin: 26px 4px 8px; }
+.section-title:first-child { margin-top: 0; }
+.pill { display: inline-block; padding: 2px 9px; border-radius: 10px; font-size: 12px; font-weight: 700; white-space: nowrap; }
+.pill.green { background: rgba(52, 199, 123, .18); color: #5be29b; }
+.pill.orange { background: rgba(255, 159, 46, .18); color: #ffb85c; }
+.pill.red { background: rgba(255, 90, 95, .18); color: #ff8a8d; }
+.pill.grey { background: rgba(255, 255, 255, .1); color: var(--ink-soft); }
+.split { display: grid; grid-template-columns: minmax(0, 320px) minmax(0, 1fr); gap: 24px; align-items: start; }
+.detail { background: var(--app-panel); border-radius: 16px; padding: 22px 24px; min-width: 0; }
+.detail h2 { margin: 0 0 6px; font-size: 24px; text-wrap: balance; }
+.detail p { margin: 12px 0 0; max-width: 65ch; color: rgba(245, 243, 255, .86); }
+.detail .meta { color: var(--ink-soft); font-size: 13px; }
+.kv { display: grid; grid-template-columns: auto 1fr; gap: 8px 16px; margin-top: 16px; font-size: 14px; }
+.kv dt { color: var(--ink-soft); }
+.kv dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
+.empty { color: var(--ink-soft); text-align: center; padding: 40px 0; }
+.note-tag { margin-left: 6px; }
+details.rule { background: var(--app-panel); border-radius: 14px; padding: 0 18px; }
+details.rule + details.rule { margin-top: 10px; }
+details.rule summary { padding: 15px 0; font-weight: 600; cursor: pointer; list-style: none; display: flex; justify-content: space-between; }
+details.rule summary::after { content: "›"; transform: rotate(90deg); transition: transform .2s; color: var(--ink-soft); }
+details.rule[open] summary::after { transform: rotate(-90deg); }
+details.rule ol { margin: 0 0 16px; padding-left: 22px; display: flex; flex-direction: column; gap: 6px; color: rgba(245, 243, 255, .86); }
+
+/* Calculatrice */
+.calc { max-width: 360px; margin: 10px auto 0; }
+.calc .screen { text-align: right; font-size: 64px; font-weight: 300; padding: 10px 8px; font-variant-numeric: tabular-nums; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.calc .keys { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.calc .keys button { aspect-ratio: 1; border-radius: 50%; background: #333; font-size: 26px; font-weight: 500; }
+.calc .keys button.fn { background: #a5a5a5; color: #111; }
+.calc .keys button.op { background: var(--orange); }
+.calc .keys button.op.on { background: #fff; color: var(--orange); }
+.calc .keys button.zero { grid-column: span 2; aspect-ratio: auto; border-radius: 40px; text-align: left; padding-left: 30px; }
+.calc .keys button:active { filter: brightness(1.3); }
+
+/* Notes */
+.notes { display: grid; grid-template-columns: minmax(0, 260px) minmax(0, 1fr); gap: 20px; height: 100%; }
+.notes textarea { width: 100%; min-height: 320px; height: 100%; resize: none; background: var(--app-panel); border: 0; border-radius: 14px; padding: 18px; line-height: 1.6; outline: none; }
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px; border-radius: 11px; background: var(--accent); color: #fff; font-weight: 600; }
+.btn.ghost { background: rgba(255, 255, 255, .08); color: var(--ink); }
+.btn.danger { background: rgba(255, 90, 95, .15); color: #ff8a8d; }
+
+/* Réglages */
+.walls { display: flex; gap: 14px; flex-wrap: wrap; padding: 16px; }
+.walls button { width: 92px; display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; }
+.walls .sw { width: 92px; height: 64px; border-radius: 12px; border: 2px solid transparent; }
+.walls button.on .sw { border-color: #fff; }
+
+/* Recherche (Spotlight) */
+.spot { position: absolute; inset: 0; z-index: 30; background: rgba(10, 6, 30, .45); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); display: flex; justify-content: center; padding: 70px 16px 16px; }
+.spot-box { width: min(640px, 100%); display: flex; flex-direction: column; gap: 14px; min-height: 0; }
+.spot-box .search-field { margin: 0; background: rgba(255, 255, 255, .16); padding: 13px 16px; border-radius: 14px; font-size: 18px; }
+.spot-results { overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
+.spot-results .list { background: rgba(30, 24, 60, .7); }
+.spot-tile { flex: none; display: grid; }
+.spot-tile .tile { width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; position: relative; overflow: hidden; }
+.spot-tile .tile svg { width: 22px; height: 22px; }
+.spot-tile .cal-tile b { font-size: 7px; }
+.spot-tile .cal-tile span { font-size: 15px; margin: 0; }
+.spot .section-title { margin: 12px 4px 6px; color: rgba(255, 255, 255, .7); }
+
+@media (max-width: 760px) {
+  .split, .notes { grid-template-columns: minmax(0, 1fr); }
+  .widget.wide { grid-column: 1 / -1; }
+  .grid { grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 14px 12px; }
+  .icon .tile { width: 62px; height: 62px; }
+  .icon .tile svg { width: 36px; height: 36px; }
+  .dock { gap: 12px; }
+  .dock .icon .tile { width: 56px; height: 56px; }
+  .page { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+}
+@media (max-width: 420px) {
+  .widget { grid-column: 1 / -1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .track, .app.anim { transition: none; }
+}
+</style>
+</head>
+<body>
+<div id="ipad">
+  <svg class="wall" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <defs>
+      <linearGradient id="g0" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--w1)"/><stop offset="1" style="stop-color:var(--w2)"/></linearGradient>
+      <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--w3);stop-opacity:.9"/><stop offset="1" style="stop-color:var(--w2);stop-opacity:.2"/></linearGradient>
+      <linearGradient id="g2" x1="1" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--w2)"/><stop offset="1" style="stop-color:var(--w1)"/></linearGradient>
+    </defs>
+    <rect width="1600" height="1000" fill="url(#g0)"/>
+    <path d="M820 -40 C 1010 160 700 330 900 520 S 1180 820 960 1040 L 1420 1040 C 1600 820 1260 640 1400 420 S 1260 120 1360 -40 Z" fill="url(#g1)" opacity=".55"/>
+    <path d="M-60 120 C 240 60 380 300 300 460 S 520 780 360 1040 L -60 1040 Z" fill="url(#g2)" opacity=".7"/>
+    <path d="M1080 -40 C 1240 120 1000 300 1180 460 S 1480 640 1660 560 L 1660 -40 Z" fill="url(#g1)" opacity=".35"/>
+    <path d="M300 1040 C 520 820 840 900 1000 760 S 1400 700 1660 820 L 1660 1040 Z" fill="url(#g2)" opacity=".6"/>
+  </svg>
+
+  <header class="status">
+    <div class="left"><span id="sb-time">--:--</span><span id="sb-date"></span><span class="badge" id="sb-badge" hidden></span></div>
+    <div class="right">
+      <span class="live">En ville</span>
+      <svg width="18" height="14" viewBox="0 0 18 14" fill="currentColor" aria-hidden="true"><path d="M9 13.5 6.4 10.6a3.7 3.7 0 0 1 5.2 0L9 13.5Zm-4.4-5a6.2 6.2 0 0 1 8.8 0l-1.3 1.4a4.3 4.3 0 0 0-6.2 0L4.6 8.5ZM1.8 5.6a10.2 10.2 0 0 1 14.4 0l-1.3 1.4a8.3 8.3 0 0 0-11.8 0L1.8 5.6Z"/></svg>
+      <span class="battery" aria-label="Batterie"><i></i></span>
+    </div>
+  </header>
+
+  <main class="home">
+    <section class="pages" id="pages" aria-label="Écran d'accueil">
+      <div class="track" id="track"></div>
+    </section>
+    <div class="dots-wrap">
+      <div class="dots" id="dots"></div>
+      <button class="search-pill" id="open-search" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        Rechercher
+      </button>
+    </div>
+  </main>
+  <nav class="dock" id="dock" aria-label="Dock"></nav>
+
+  <section class="app" id="app" hidden aria-modal="true" role="dialog">
+    <div class="app-bar">
+      <button class="back" id="app-back" type="button" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m15 5-7 7 7 7"/></svg><span>Retour</span></button>
+      <h1 id="app-title"></h1>
+      <button class="close" id="app-close" type="button" aria-label="Fermer l'app"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    </div>
+    <div class="app-body" id="app-body"></div>
+    <div class="home-bar" id="home-bar" title="Revenir à l'accueil"></div>
+  </section>
+
+  <section class="spot" id="spot" hidden>
+    <div class="spot-box">
+      <label class="search-field">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="spot-input" type="search" placeholder="Apps, contacts, actualités…" autocomplete="off">
+      </label>
+      <div class="spot-results" id="spot-results"></div>
+    </div>
+  </section>
+</div>
+
+<script>
+/* =====================================================================
+   CONTENU DE L'INTRANET : modifie ce bloc pour mettre tes propres infos.
+   Tout ce qui est marqué "exemple: true" est du contenu d'exemple.
+   ===================================================================== */
+const INTRANET = {
+  serveur: "Nova",
+  ville: "Amboise",
+  discord: "https://discord.gg/ton-invitation",
+
+  actualites: [
+    { exemple: true, titre: "Le garage Martin ouvre ses portes", date: "2026-10-24", auteur: "Mairie d'Amboise", texte: "Le nouveau garage de la zone industrielle propose réparations, entretien et personnalisation. Rendez-vous possibles tous les soirs à partir de 19 h." },
+    { exemple: true, titre: "La gendarmerie recrute", date: "2026-10-22", auteur: "Gendarmerie nationale", texte: "Trois postes de gendarmes adjoints sont ouverts. Candidatures dans l'app Emplois jusqu'au 31 octobre." },
+    { exemple: true, titre: "Soirée concert au bar Le Central", date: "2026-10-20", auteur: "Le Central", texte: "Samedi soir, concert en terrasse et happy hour de 21 h à 23 h. Entrée libre." },
+  ],
+
+  evenements: [
+    { exemple: true, titre: "Marché de la place du Château", date: "2026-10-26", heure: "18:00", lieu: "Place du Château" },
+    { exemple: true, titre: "Conseil municipal", date: "2026-10-28", heure: "20:30", lieu: "Mairie" },
+    { exemple: true, titre: "Rallye des vignobles", date: "2026-11-02", heure: "21:00", lieu: "Départ parking du lac" },
+  ],
+
+  entreprises: [
+    { exemple: true, nom: "Garage Martin", secteur: "Automobile", statut: "Recrute", patron: "Hugo Martin", tel: "555-0142", description: "Réparation, entretien et personnalisation de véhicules." },
+    { exemple: true, nom: "Le Central", secteur: "Bar · Restauration", statut: "Ouvert", patron: "Léa Garnier", tel: "555-0178", description: "Bar de la place, soirées à thème le week-end." },
+    { exemple: true, nom: "Ferme des Coteaux", secteur: "Agriculture", statut: "Recrute", patron: "Paul Lefèvre", tel: "555-0110", description: "Cultures, élevage et vente directe au marché." },
+    { exemple: true, nom: "Taxi Loire", secteur: "Transport", statut: "Fermé", patron: "Nina Roux", tel: "555-0199", description: "Courses en ville et vers les communes voisines." },
+  ],
+
+  emplois: [
+    { exemple: true, poste: "Mécanicien(ne)", entreprise: "Garage Martin", salaire: "1 800 € / semaine", details: "Réparations courantes et dépannage. Permis B obligatoire." },
+    { exemple: true, poste: "Gendarme adjoint", entreprise: "Gendarmerie nationale", salaire: "2 100 € / semaine", details: "Patrouilles, accueil du public, interventions." },
+    { exemple: true, poste: "Ouvrier(ère) agricole", entreprise: "Ferme des Coteaux", salaire: "1 500 € / semaine", details: "Récolte, entretien des parcelles, livraison au marché." },
+  ],
+
+  annuaire: [
+    { exemple: true, nom: "Hugo Martin", role: "Gérant", entreprise: "Garage Martin", tel: "555-0142" },
+    { exemple: true, nom: "Léa Garnier", role: "Gérante", entreprise: "Le Central", tel: "555-0178" },
+    { exemple: true, nom: "Capitaine Durand", role: "Commandant", entreprise: "Gendarmerie", tel: "17" },
+    { exemple: true, nom: "Dr Claire Morel", role: "Médecin", entreprise: "Hôpital d'Amboise", tel: "15" },
+    { exemple: true, nom: "Paul Lefèvre", role: "Exploitant", entreprise: "Ferme des Coteaux", tel: "555-0110" },
+    { exemple: true, nom: "Nina Roux", role: "Chauffeuse", entreprise: "Taxi Loire", tel: "555-0199" },
+  ],
+
+  reglement: [
+    { titre: "Règles générales", regles: ["Respect de tous les joueurs et du staff.", "Pas d'insultes hors roleplay ni de propos discriminatoires.", "Le staff a toujours le dernier mot."] },
+    { titre: "Roleplay", regles: ["Rester dans son personnage en ville.", "Pas de freekill : toute agression doit avoir une raison roleplay.", "Pas de metagaming (utiliser des infos obtenues hors jeu)."] },
+    { titre: "Véhicules", regles: ["Conduite réaliste en agglomération.", "Pas de véhicule abandonné au milieu de la route.", "Les courses-poursuites doivent rester crédibles."] },
+  ],
+
+  liens: [
+    { nom: "Discord du serveur", url: "https://discord.gg/ton-invitation", description: "Annonces, candidatures et support." },
+  ],
+};
+
+/* =====================================================================
+   ICÔNES DES APPS (dessinées en SVG, pas d'images externes)
+   ===================================================================== */
+const S = (d, extra = "") => `<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" ${extra}>${d}</svg>`;
+const GLYPHS = {
+  annuaire: S('<rect x="5" y="3" width="14" height="18" rx="2.5" fill="rgba(255,255,255,.2)"/><circle cx="12" cy="10" r="2.6"/><path d="M8.2 16.6c.7-1.9 2.1-2.8 3.8-2.8s3.1.9 3.8 2.8"/>'),
+  actualites: S('<rect x="3.5" y="4.5" width="17" height="15" rx="2.5" fill="rgba(255,255,255,.2)"/><path d="M7 9h10M7 12.5h10M7 16h6"/>'),
+  entreprises: S('<path d="M4 20V8l6-3v15M10 20V10l10 3v7M3 20h18" fill="rgba(255,255,255,.2)"/><path d="M13.5 15h3M13.5 17.5h3M6.5 11h1M6.5 14h1M6.5 17h1"/>'),
+  emplois: S('<rect x="3.5" y="7.5" width="17" height="12" rx="2.5" fill="rgba(255,255,255,.2)"/><path d="M9 7.5V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1.5M3.5 12.5h17"/>'),
+  reglement: S('<path d="M12 3 5 6v5.5c0 4.2 2.9 7.6 7 9.5 4.1-1.9 7-5.3 7-9.5V6l-7-3Z" fill="rgba(255,255,255,.2)"/><path d="m9 12 2.2 2.2L15.5 10"/>'),
+  calculatrice: S('<rect x="5" y="3" width="14" height="18" rx="3" fill="rgba(255,255,255,.18)"/><path d="M8 7h8"/><circle cx="8.6" cy="12" r=".6" fill="#fff"/><circle cx="12" cy="12" r=".6" fill="#fff"/><circle cx="15.4" cy="12" r=".6" fill="#fff"/><circle cx="8.6" cy="15.5" r=".6" fill="#fff"/><circle cx="12" cy="15.5" r=".6" fill="#fff"/><circle cx="15.4" cy="15.5" r=".6" fill="#fff"/>'),
+  notes: S('<rect x="4.5" y="3.5" width="15" height="17" rx="2.5" fill="rgba(255,255,255,.25)"/><path d="M8 8.5h8M8 12h8M8 15.5h5"/>'),
+  reglages: S('<circle cx="12" cy="12" r="3"/><path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M5.5 18.5l1.7-1.7M16.8 7.2l1.7-1.7"/>', 'stroke-width="2"'),
+  liens: S('<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>', 'stroke-width="2.2"'),
+  support: S('<circle cx="12" cy="12" r="8.5" fill="rgba(255,255,255,.2)"/><path d="M9.6 9.4a2.5 2.5 0 0 1 4.8 1c0 1.7-2.4 2.1-2.4 3.6"/><circle cx="12" cy="17" r=".7" fill="#fff"/>', 'stroke-width="2"'),
+};
+
+const APPS = [
+  { id: "actualites", nom: "Actualités", bg: "linear-gradient(160deg,#ff6b6b,#e0245e)" },
+  { id: "annuaire", nom: "Annuaire", bg: "linear-gradient(160deg,#9aa4b8,#5d6578)" },
+  { id: "entreprises", nom: "Entreprises", bg: "linear-gradient(160deg,#5ea8ff,#2563eb)" },
+  { id: "emplois", nom: "Emplois", bg: "linear-gradient(160deg,#ffbf47,#f08a00)" },
+  { id: "calendrier", nom: "Calendrier", bg: "#fff" },
+  { id: "reglement", nom: "Règlement", bg: "linear-gradient(160deg,#5be29b,#13a05a)" },
+  { id: "support", nom: "Support", bg: "linear-gradient(160deg,#a78bfa,#6d4ae6)" },
+  { id: "liens", nom: "Liens", bg: "linear-gradient(160deg,#4dd4ff,#0b8bd9)" },
+  { id: "calculatrice", nom: "Calculatrice", bg: "linear-gradient(160deg,#4b4b4f,#1d1d20)" },
+  { id: "notes", nom: "Notes", bg: "linear-gradient(160deg,#ffe066,#f5b700)" },
+  { id: "reglages", nom: "Réglages", bg: "linear-gradient(160deg,#a3a7b3,#62666f)" },
+];
+const PAGE1 = ["entreprises", "emplois", "calendrier", "reglement", "support", "liens"];
+const PAGE2 = ["calculatrice", "annuaire", "actualites"];
+const DOCK = ["actualites", "annuaire", "notes", "reglages"];
+
+/* =====================================================================
+   OUTILS
+   ===================================================================== */
+const $ = (s, r = document) => r.querySelector(s);
+const esc = (t) => String(t ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const store = {
+  get(k, d) { try { const v = localStorage.getItem("intranet." + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem("intranet." + k, JSON.stringify(v)); } catch {} },
+};
+const JOURS = ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"];
+const MOIS_COURT = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."];
+const MOIS = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
+const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+const parseDate = (iso) => { const [y, m, d] = iso.split("-").map(Number); return new Date(y, m - 1, d); };
+const fmtDate = (iso) => { const d = parseDate(iso); return `${d.getDate()} ${MOIS[d.getMonth()]}`; };
+const initiales = (n) => n.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]).join("").toUpperCase();
+const couleur = (t) => { let h = 0; for (const c of t) h = (h * 31 + c.charCodeAt(0)) % 360; return `hsl(${h} 55% 48%)`; };
+const tagExemple = (o) => (o.exemple ? '<span class="pill grey note-tag">Exemple</span>' : "");
+const ICON_SEARCH = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>';
+const appById = (id) => APPS.find((a) => a.id === id);
+
+function tileHtml(app) {
+  if (app.id === "calendrier") {
+    const n = new Date();
+    return `<div class="tile cal-tile"><b>${JOURS[n.getDay()].slice(0, 3)}.</b><span>${n.getDate()}</span></div>`;
+  }
+  return `<div class="tile" style="background:${app.bg}">${GLYPHS[app.id] || ""}</div>`;
+}
+function iconHtml(id, badge) {
+  const app = appById(id);
+  const b = badge ? `<span class="badge dot-badge">${badge}</span>` : "";
+  return `<button class="icon" type="button" data-app="${id}" aria-label="${esc(app.nom)}"><span class="tile-wrap">${tileHtml(app)}${b}</span><span class="label">${esc(app.nom)}</span></button>`;
+}
+
+/* =====================================================================
+   ÉCRAN D'ACCUEIL
+   ===================================================================== */
+const prochainEvenement = () => {
+  const auj = new Date(); auj.setHours(0, 0, 0, 0);
+  return [...INTRANET.evenements].sort((a, b) => a.date.localeCompare(b.date)).find((e) => parseDate(e.date) >= auj) || null;
+};
+
+function renderHome() {
+  const ev = prochainEvenement();
+  const news = INTRANET.actualites.slice(0, 3);
+  const widgets = `
+    <div class="widget w-clock">
+      <h3 id="w-dow"></h3>
+      <div class="day" id="w-day"></div>
+      <div class="month" id="w-month"></div>
+      <div class="time" id="w-time"></div>
+      <div class="place"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.5"/></svg>${esc(INTRANET.ville)}</div>
+    </div>
+    <button class="widget w-event" type="button" data-app="calendrier">
+      <h3>Prochain événement</h3>
+      ${ev ? `<div class="title">${esc(ev.titre)}</div><div class="meta">${esc(ev.lieu)}</div><div class="when">${cap(fmtDate(ev.date))} · ${esc(ev.heure)}</div>` : `<div class="title">Aucun événement prévu</div><div class="meta">Les prochains rendez-vous de la ville apparaîtront ici.</div>`}
+    </button>
+    <button class="widget wide w-notifs" type="button" data-app="actualites">
+      <h3>Actualités</h3>
+      <ul>${news.map((n) => `<li><span class="mini" style="background:${appById("actualites").bg}">${GLYPHS.actualites}</span><div><strong>${esc(n.titre)}</strong><small>${esc(n.auteur)} · ${fmtDate(n.date)}</small></div></li>`).join("")}</ul>
+    </button>`;
+  const pages = [
+    `<div class="grid">${widgets}${PAGE1.map((id) => iconHtml(id)).join("")}</div>`,
+    `<div class="grid">${PAGE2.map((id) => iconHtml(id)).join("")}</div>`,
+  ];
+  $("#track").innerHTML = pages.map((p) => `<div class="page">${p}</div>`).join("");
+  $("#dots").innerHTML = pages.map((_, i) => `<button type="button" aria-label="Page ${i + 1}" data-page="${i}"></button>`).join("");
+  $("#dock").innerHTML = DOCK.map((id) => iconHtml(id, id === "actualites" ? INTRANET.actualites.length : 0)).join("");
+  const b = $("#sb-badge"); b.textContent = INTRANET.actualites.length; b.hidden = !INTRANET.actualites.length;
+  goPage(page);
+  tick();
+}
+
+function tick() {
+  const n = new Date();
+  const hh = String(n.getHours()).padStart(2, "0"), mm = String(n.getMinutes()).padStart(2, "0");
+  $("#sb-time").textContent = `${hh}:${mm}`;
+  $("#sb-date").textContent = `${cap(JOURS[n.getDay()].slice(0, 3))}. ${n.getDate()} ${MOIS_COURT[n.getMonth()]}`;
+  const set = (id, t) => { const el = document.getElementById(id); if (el) el.textContent = t; };
+  set("w-dow", JOURS[n.getDay()]);
+  set("w-day", n.getDate());
+  set("w-month", cap(MOIS[n.getMonth()]));
+  set("w-time", `${hh}:${mm}`);
+}
+
+/* Pages qui glissent (souris, doigt, molette, flèches) */
+let page = 0;
+const pageCount = () => $("#track").children.length;
+function goPage(i) {
+  page = Math.max(0, Math.min(pageCount() - 1, i));
+  $("#track").style.transform = `translateX(${-page * 100}%)`;
+  [...$("#dots").children].forEach((d, k) => d.classList.toggle("on", k === page));
+}
+(() => {
+  const area = $("#pages"), track = $("#track");
+  let x0 = null, dx = 0, moved = false;
+  area.addEventListener("pointerdown", (e) => { if (e.button !== 0) return; x0 = e.clientX; dx = 0; moved = false; });
+  window.addEventListener("pointermove", (e) => {
+    if (x0 == null) return;
+    dx = e.clientX - x0;
+    if (Math.abs(dx) > 8) { moved = true; track.classList.add("dragging"); track.style.transform = `translateX(calc(${-page * 100}% + ${dx}px))`; }
+  });
+  window.addEventListener("pointerup", () => {
+    if (x0 == null) return;
+    track.classList.remove("dragging");
+    if (moved && Math.abs(dx) > area.clientWidth * 0.15) goPage(page + (dx < 0 ? 1 : -1)); else goPage(page);
+    x0 = null;
+  });
+  // Un glissement ne doit pas ouvrir l'app sous le curseur
+  area.addEventListener("click", (e) => { if (moved) { e.stopPropagation(); e.preventDefault(); moved = false; } }, true);
+  let wheelLock = 0;
+  area.addEventListener("wheel", (e) => {
+    const d = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : 0;
+    if (Math.abs(d) < 20 || Date.now() < wheelLock) return;
+    wheelLock = Date.now() + 500; goPage(page + (d > 0 ? 1 : -1));
+  }, { passive: true });
+})();
+
+/* =====================================================================
+   OUVERTURE / FERMETURE DES APPS (animation de zoom depuis l'icône)
+   ===================================================================== */
+const win = $("#app");
+let current = null, fromRect = null, backStack = [];
+
+function rectTransform(r) {
+  const W = win.parentElement.clientWidth, H = win.parentElement.clientHeight;
+  return `translate(${r.left}px, ${r.top}px) scale(${r.width / W}, ${r.height / H})`;
+}
+function openApp(id, sourceEl) {
+  const app = appById(id); if (!app) return;
+  current = id; backStack = [];
+  $("#app-title").textContent = app.nom;
+  renderApp(id);
+  const tile = sourceEl && sourceEl.querySelector ? (sourceEl.querySelector(".tile") || sourceEl) : null;
+  const host = win.parentElement.getBoundingClientRect();
+  fromRect = tile ? (() => { const r = tile.getBoundingClientRect(); return { left: r.left - host.left, top: r.top - host.top, width: r.width, height: r.height }; })() : null;
+  win.hidden = false;
+  win.classList.remove("anim");
+  if (fromRect && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    win.style.transform = rectTransform(fromRect); win.style.borderRadius = "60px"; win.style.opacity = ".4";
+    win.getBoundingClientRect();
+    win.classList.add("anim");
+  }
+  win.style.transform = ""; win.style.borderRadius = ""; win.style.opacity = "";
+  $("#app-close").focus({ preventScroll: true });
+}
+function closeApp() {
+  if (win.hidden) return;
+  const done = () => { win.hidden = true; win.classList.remove("anim"); win.style.transform = ""; win.style.borderRadius = ""; win.style.opacity = ""; $("#app-body").innerHTML = ""; current = null; };
+  if (fromRect && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    win.classList.add("anim");
+    win.style.transform = rectTransform(fromRect); win.style.borderRadius = "60px"; win.style.opacity = "0";
+    setTimeout(done, 340);
+  } else done();
+}
+function setView(html, opts = {}) {
+  $("#app-body").innerHTML = `<div class="app-inner">${html}</div>`;
+  $("#app-body").scrollTop = 0;
+  const back = $("#app-back");
+  back.hidden = !opts.back;
+  back.onclick = opts.back || null;
+}
+
+document.addEventListener("click", (e) => {
+  const t = e.target.closest("[data-app]");
+  if (t && !t.closest("#app")) { closeSpot(); openApp(t.dataset.app, t); }
+  const d = e.target.closest("[data-page]");
+  if (d) goPage(Number(d.dataset.page));
+});
+$("#app-close").addEventListener("click", closeApp);
+(() => {
+  // Barre d'accueil : un clic ou un glissement vers le haut ferme l'app, comme sur iPad
+  const bar = $("#home-bar"); let y0 = null;
+  bar.addEventListener("pointerdown", (e) => { y0 = e.clientY; bar.setPointerCapture(e.pointerId); });
+  bar.addEventListener("pointermove", (e) => {
+    if (y0 == null) return;
+    const dy = Math.min(0, e.clientY - y0);
+    win.style.transform = `translateY(${dy}px) scale(${1 + dy / 2000})`; win.style.borderRadius = `${Math.min(40, -dy / 4)}px`;
+  });
+  bar.addEventListener("pointerup", (e) => {
+    const dy = e.clientY - (y0 ?? e.clientY); y0 = null;
+    if (dy < -60 || Math.abs(dy) < 6) closeApp(); else { win.classList.add("anim"); win.style.transform = ""; win.style.borderRadius = ""; }
+  });
+})();
+
+/* =====================================================================
+   CONTENU DES APPS
+   ===================================================================== */
+function renderApp(id) {
+  ({
+    actualites: appActualites, annuaire: appAnnuaire, entreprises: appEntreprises, emplois: appEmplois,
+    calendrier: appCalendrier, reglement: appReglement, support: appSupport, liens: appLiens,
+    calculatrice: appCalculatrice, notes: appNotes, reglages: appReglages,
+  })[id]();
+}
+
+function appActualites() {
+  const list = INTRANET.actualites;
+  const article = (i) => {
+    const n = list[i];
+    setView(`<article class="detail"><div class="meta">${esc(n.auteur)} · ${cap(fmtDate(n.date))}${tagExemple(n)}</div><h2>${esc(n.titre)}</h2><p>${esc(n.texte)}</p></article>`, { back: appActualites });
+  };
+  setView(list.length ? `<div class="list">${list.map((n, i) => `<button class="row" type="button" data-i="${i}"><span class="grow"><strong>${esc(n.titre)}</strong><small>${esc(n.auteur)}</small></span><span class="end">${fmtDate(n.date)}</span></button>`).join("")}</div>`
+    : `<p class="empty">Aucune actualité pour le moment.</p>`);
+  $("#app-body").querySelectorAll("[data-i]").forEach((b) => (b.onclick = () => article(Number(b.dataset.i))));
+}
+
+function appAnnuaire() {
+  const draw = (q = "") => {
+    const t = q.trim().toLowerCase();
+    const rows = INTRANET.annuaire.filter((c) => !t || `${c.nom} ${c.role} ${c.entreprise}`.toLowerCase().includes(t)).sort((a, b) => a.nom.localeCompare(b.nom));
+    $("#annu-list").innerHTML = rows.length ? rows.map((c) => `<div class="row"><span class="avatar" style="background:${couleur(c.nom)}">${esc(initiales(c.nom))}</span><span class="grow"><strong>${esc(c.nom)}</strong><small>${esc(c.role)} · ${esc(c.entreprise)}</small></span><span class="end">${esc(c.tel)}</span></div>`).join("") : `<p class="empty">Aucun contact trouvé.</p>`;
+  };
+  setView(`<label class="search-field">${ICON_SEARCH}<input id="annu-q" type="search" placeholder="Rechercher un nom, un métier…"></label><div class="list" id="annu-list"></div>`);
+  $("#annu-q").addEventListener("input", (e) => draw(e.target.value));
+  draw();
+}
+
+const statutPill = (s) => `<span class="pill ${s === "Recrute" ? "orange" : s === "Ouvert" ? "green" : "red"}">${esc(s)}</span>`;
+function appEntreprises() {
+  const list = INTRANET.entreprises;
+  const show = (i) => {
+    const e = list[i];
+    $("#ent-detail").innerHTML = `<div class="meta">${esc(e.secteur)}${tagExemple(e)}</div><h2>${esc(e.nom)}</h2>${statutPill(e.statut)}<p>${esc(e.description)}</p><dl class="kv"><dt>Gérant(e)</dt><dd>${esc(e.patron)}</dd><dt>Téléphone</dt><dd>${esc(e.tel)}</dd></dl>`;
+    $("#app-body").querySelectorAll("[data-i]").forEach((b) => (b.style.background = Number(b.dataset.i) === i ? "rgba(139,116,255,.16)" : ""));
+  };
+  setView(`<div class="split"><div class="list">${list.map((e, i) => `<button class="row" type="button" data-i="${i}"><span class="avatar" style="background:${couleur(e.nom)};border-radius:12px">${esc(initiales(e.nom))}</span><span class="grow"><strong>${esc(e.nom)}</strong><small>${esc(e.secteur)}</small></span>${statutPill(e.statut)}</button>`).join("")}</div><div class="detail" id="ent-detail"></div></div>`);
+  $("#app-body").querySelectorAll("[data-i]").forEach((b) => (b.onclick = () => show(Number(b.dataset.i))));
+  if (list.length) show(0); else $("#ent-detail").innerHTML = `<p class="empty">Aucune entreprise enregistrée.</p>`;
+}
+
+function appEmplois() {
+  const list = INTRANET.emplois;
+  setView(list.length ? `<div class="list">${list.map((o) => `<div class="row"><span class="grow"><strong>${esc(o.poste)}${tagExemple(o)}</strong><small>${esc(o.entreprise)} · ${esc(o.details)}</small></span><span class="end">${esc(o.salaire)}</span></div>`).join("")}</div><p class="meta" style="color:var(--ink-soft);margin-top:16px">Pour postuler, contacte l'entreprise via l'Annuaire ou passe sur place.</p>`
+    : `<p class="empty">Aucune offre d'emploi pour le moment.</p>`);
+}
+
+function appCalendrier() {
+  const list = [...INTRANET.evenements].sort((a, b) => a.date.localeCompare(b.date));
+  const auj = new Date(); auj.setHours(0, 0, 0, 0);
+  setView(list.length ? `<div class="list">${list.map((e) => {
+    const d = parseDate(e.date); const passe = d < auj;
+    return `<div class="row" style="${passe ? "opacity:.5" : ""}"><span class="tile cal-tile" style="width:46px;height:46px;border-radius:12px;flex:none"><b style="font-size:9px">${JOURS[d.getDay()].slice(0, 3)}.</b><span style="font-size:20px">${d.getDate()}</span></span><span class="grow"><strong>${esc(e.titre)}${tagExemple(e)}</strong><small>${esc(e.lieu)}</small></span><span class="end">${esc(e.heure)}</span></div>`;
+  }).join("")}</div>` : `<p class="empty">Aucun événement prévu.</p>`);
+}
+
+function appReglement() {
+  setView(INTRANET.reglement.map((s, i) => `<details class="rule"${i === 0 ? " open" : ""}><summary>${esc(s.titre)}</summary><ol>${s.regles.map((r) => `<li>${esc(r)}</li>`).join("")}</ol></details>`).join(""));
+}
+
+function appSupport() {
+  setView(`<div class="detail"><h2>Besoin d'aide en jeu ?</h2><p>Appuie sur la touche <strong>N</strong> pour ouvrir un ticket. Choisis la catégorie qui correspond à ton problème, décris-le en quelques mots, et un membre du staff en service le prendra en charge.</p></div>
+    <div class="section-title" style="margin-top:24px">Catégories de tickets</div>
+    <div class="list">${["Signalement d'un joueur", "Personnage bloqué", "Bug ou problème technique", "Remboursement", "Véhicule"].map((c) => `<div class="row"><span class="grow"><strong>${esc(c)}</strong></span></div>`).join("")}</div>`);
+}
+
+function appLiens() {
+  setView(`<div class="list">${INTRANET.liens.map((l) => `<a class="row" href="${esc(l.url)}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none"><span class="grow"><strong>${esc(l.nom)}</strong><small>${esc(l.description)}</small></span><span class="end">${esc(l.url.replace(/^https?:\/\//, ""))}</span></a>`).join("")}</div>`);
+}
+
+function appCalculatrice() {
+  let cur = "0", acc = null, op = null, fresh = true;
+  const fmt = (v) => { const n = Number(v); if (!isFinite(n)) return "Erreur"; const s = Math.abs(n) >= 1e12 ? n.toExponential(4) : String(Math.round(n * 1e9) / 1e9); return s.replace(".", ","); };
+  const calc = (a, b, o) => o === "+" ? a + b : o === "−" ? a - b : o === "×" ? a * b : b === 0 ? NaN : a / b;
+  const keys = [["AC", "fn"], ["±", "fn"], ["%", "fn"], ["÷", "op"], ["7"], ["8"], ["9"], ["×", "op"], ["4"], ["5"], ["6"], ["−", "op"], ["1"], ["2"], ["3"], ["+", "op"], ["0", "zero"], [","], ["=", "op"]];
+  setView(`<div class="calc"><div class="screen" id="calc-screen">0</div><div class="keys">${keys.map(([k, c]) => `<button type="button" class="${c || ""}" data-k="${k}">${k}</button>`).join("")}</div></div>`);
+  const screen = $("#calc-screen");
+  const draw = () => { screen.textContent = cur === "Erreur" ? cur : !fresh && cur.includes(".") ? cur.replace(".", ",") : fmt(cur); $("#app-body").querySelectorAll(".op").forEach((b) => b.classList.toggle("on", b.dataset.k === op && fresh)); };
+  const press = (k) => {
+    if (/^\d$/.test(k)) { cur = fresh || cur === "0" ? k : cur.length < 12 ? cur + k : cur; fresh = false; }
+    else if (k === ",") { if (fresh) { cur = "0."; fresh = false; } else if (!cur.includes(".")) cur += "."; }
+    else if (k === "AC") { cur = "0"; acc = null; op = null; fresh = true; }
+    else if (k === "±") cur = String(-Number(cur));
+    else if (k === "%") cur = String(Number(cur) / 100);
+    else if (k === "=") { if (op != null && acc != null) { cur = String(calc(acc, Number(cur), op)); acc = null; op = null; fresh = true; } }
+    else { if (op != null && acc != null && !fresh) cur = String(calc(acc, Number(cur), op)); acc = Number(cur); op = k; fresh = true; }
+    if (cur === "NaN") cur = "Erreur";
+    draw();
+  };
+  $("#app-body").querySelectorAll("[data-k]").forEach((b) => (b.onclick = () => press(b.dataset.k)));
+}
+
+function appNotes() {
+  let notes = store.get("notes", [{ id: 1, texte: "Mes notes\nCette note reste enregistrée dans le navigateur de la tablette." }]);
+  let sel = notes[0]?.id ?? null;
+  const save = () => store.set("notes", notes);
+  const titre = (n) => (n.texte.split("\n")[0] || "Nouvelle note").slice(0, 40);
+  const draw = () => {
+    const n = notes.find((x) => x.id === sel);
+    setView(`<div class="notes"><div><div style="display:flex;gap:8px;margin-bottom:12px"><button class="btn" type="button" id="note-new">Nouvelle note</button>${n ? '<button class="btn danger" type="button" id="note-del">Supprimer</button>' : ""}</div><div class="list">${notes.map((x) => `<button class="row" type="button" data-id="${x.id}" style="${x.id === sel ? "background:rgba(255,224,102,.12)" : ""}"><span class="grow"><strong>${esc(titre(x))}</strong></span></button>`).join("") || '<p class="empty">Aucune note.</p>'}</div></div>${n ? `<textarea id="note-text" aria-label="Contenu de la note">${esc(n.texte)}</textarea>` : '<p class="empty">Crée une note pour commencer.</p>'}</div>`);
+    $("#note-new").onclick = () => { const id = Date.now(); notes.unshift({ id, texte: "" }); sel = id; save(); draw(); $("#note-text").focus(); };
+    const del = $("#note-del"); if (del) del.onclick = () => { notes = notes.filter((x) => x.id !== sel); sel = notes[0]?.id ?? null; save(); draw(); };
+    $("#app-body").querySelectorAll("[data-id]").forEach((b) => (b.onclick = () => { sel = Number(b.dataset.id); draw(); }));
+    const ta = $("#note-text"); if (ta) ta.oninput = () => { n.texte = ta.value; save(); const r = $(`[data-id="${n.id}"] strong`); if (r) r.textContent = titre(n); };
+  };
+  draw();
+}
+
+const FONDS = {
+  violet: { nom: "Violet", w1: "#22185e", w2: "#4b2fb8", w3: "#7b5cf5" },
+  nuit: { nom: "Nuit", w1: "#0b1530", w2: "#1d3b7a", w3: "#3f7bd9" },
+  aurore: { nom: "Aurore", w1: "#3a1238", w2: "#a3325a", w3: "#ff8a5c" },
+  foret: { nom: "Forêt", w1: "#0c2420", w2: "#1f6b52", w3: "#5fd39a" },
+};
+function appliquerFond(k) {
+  const f = FONDS[k] || FONDS.violet;
+  const r = document.documentElement.style;
+  r.setProperty("--w1", f.w1); r.setProperty("--w2", f.w2); r.setProperty("--w3", f.w3);
+}
+function appReglages() {
+  const actuel = store.get("fond", "violet");
+  setView(`<div class="section-title">Fond d'écran</div><div class="list"><div class="walls">${Object.entries(FONDS).map(([k, f]) => `<button type="button" data-fond="${k}" class="${k === actuel ? "on" : ""}"><span class="sw" style="background:linear-gradient(135deg,${f.w1},${f.w2} 55%,${f.w3})"></span>${esc(f.nom)}</button>`).join("")}</div></div>
+    <div class="section-title">À propos</div><div class="list">
+      <div class="row"><span class="grow"><strong>Serveur</strong></span><span class="end">${esc(INTRANET.serveur)}</span></div>
+      <div class="row"><span class="grow"><strong>Ville</strong></span><span class="end">${esc(INTRANET.ville)}</span></div>
+      <div class="row"><span class="grow"><strong>Contenu</strong><small>Les éléments marqués « Exemple » sont à remplacer par les vraies infos du serveur.</small></span></div>
+    </div>`);
+  $("#app-body").querySelectorAll("[data-fond]").forEach((b) => (b.onclick = () => { store.set("fond", b.dataset.fond); appliquerFond(b.dataset.fond); appReglages(); }));
+}
+
+/* =====================================================================
+   RECHERCHE (comme Spotlight)
+   ===================================================================== */
+const spot = $("#spot");
+function openSpot() { spot.hidden = false; const i = $("#spot-input"); i.value = ""; drawSpot(""); i.focus(); }
+function closeSpot() { spot.hidden = true; }
+function drawSpot(q) {
+  const t = q.trim().toLowerCase();
+  const has = (s) => s.toLowerCase().includes(t);
+  const apps = APPS.filter((a) => !t || has(a.nom));
+  const contacts = t ? INTRANET.annuaire.filter((c) => has(`${c.nom} ${c.role} ${c.entreprise}`)) : [];
+  const news = t ? INTRANET.actualites.filter((n) => has(`${n.titre} ${n.texte}`)) : [];
+  let html = "";
+  if (apps.length) html += `<div class="section-title">Apps</div><div class="list">${apps.map((a) => `<button class="row" type="button" data-app="${a.id}"><span class="spot-tile">${tileHtml(a)}</span><span class="grow"><strong>${esc(a.nom)}</strong></span></button>`).join("")}</div>`;
+  if (contacts.length) html += `<div class="section-title">Contacts</div><div class="list">${contacts.map((c) => `<button class="row" type="button" data-app="annuaire"><span class="avatar" style="background:${couleur(c.nom)}">${esc(initiales(c.nom))}</span><span class="grow"><strong>${esc(c.nom)}</strong><small>${esc(c.role)} · ${esc(c.entreprise)}</small></span><span class="end">${esc(c.tel)}</span></button>`).join("")}</div>`;
+  if (news.length) html += `<div class="section-title">Actualités</div><div class="list">${news.map((n) => `<button class="row" type="button" data-app="actualites"><span class="grow"><strong>${esc(n.titre)}</strong><small>${esc(n.auteur)}</small></span></button>`).join("")}</div>`;
+  $("#spot-results").innerHTML = html || `<p class="empty">Aucun résultat pour « ${esc(q)} ».</p>`;
+}
+$("#open-search").addEventListener("click", openSpot);
+$("#spot-input").addEventListener("input", (e) => drawSpot(e.target.value));
+$("#spot-input").addEventListener("keydown", (e) => { if (e.key === "Enter") { const f = $("#spot-results [data-app]"); if (f) f.click(); } });
+spot.addEventListener("click", (e) => { if (e.target === spot) closeSpot(); });
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") { if (!spot.hidden) closeSpot(); else closeApp(); }
+  if (!win.hidden || !spot.hidden || /INPUT|TEXTAREA/.test(document.activeElement?.tagName || "")) return;
+  if (e.key === "ArrowRight") goPage(page + 1);
+  if (e.key === "ArrowLeft") goPage(page - 1);
+});
+
+appliquerFond(store.get("fond", "violet"));
+renderHome();
+setInterval(tick, 10000);
+</script>
+</body>
+</html>
