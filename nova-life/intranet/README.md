@@ -1,4 +1,4 @@
-# Intranet Nova
+# Neoran Intranet
 
 Site de la tablette en jeu (navigateur Blue Lightfox), dans le style d'un iPad.
 Version PHP : elle tourne sur un hébergement Web classique (Apache + PHP), sans processus à lancer.
@@ -6,10 +6,10 @@ Version PHP : elle tourne sur un hébergement Web classique (Apache + PHP), sans
 ## Fichiers
 
 - `index.html` : la page de la tablette.
-- `api.php` : l'API (contenu, comptes staff, connexion). Remplace l'ancien `server.js`.
+- `api.php` : l'API (contenu, comptes, connexion, entreprises, tchat).
 - `.htaccess` : redirige `/api/...` vers `api.php` et bloque l'accès aux fichiers cachés.
 - `.env` : configuration secrète (mot de passe admin). À créer à partir de `.env.example`. Ne pas partager.
-- `data/` : créé automatiquement, contient le contenu et les comptes staff. Protégé par `data/.htaccess`. À sauvegarder, ne pas partager.
+- `data/` : créé automatiquement, contient le contenu, les comptes (`staff.json`), les entreprises (`entreprises.json`) et les tchats (`tchat-<id>.json`). Protégé par `data/.htaccess`. À sauvegarder, ne pas partager.
 - `DEPLOIEMENT-INFOMANIAK.md` : étapes de mise en ligne.
 
 ## Configuration (.env)
@@ -48,13 +48,38 @@ Les éléments marqués `exemple: true` sont des exemples et affichent une étiq
 - **Recherche** : cherche dans les apps, les contacts et les actualités.
 - **Notes et fond d'écran** : enregistrés dans le navigateur de chaque joueur.
 
+## Comptes Neoran (app Réglages)
+
+Comme sur un iPad, le compte se gère en haut de l'app **Réglages** :
+
+- **Créer un compte :** chaque joueur crée un compte (nom du personnage, identifiant, mot de passe, téléphone en jeu facultatif). 5 créations maximum par heure et par connexion.
+- **Profil :** nom du personnage, téléphone et mot de passe (le mot de passe actuel est demandé pour le changer).
+- **Portefeuille :** solde du joueur et derniers salaires et virements reçus de ses entreprises.
+- La connexion est partagée par Réglages, Gestion entreprise et Staff, et reste active 7 jours.
+
+Trois rôles : **Joueur** (par défaut), **Staff** et **Admin**. Un admin change le rôle d'un compte depuis l'app Staff → Comptes.
+
+## Gestion entreprise
+
+L'app **Gestion entreprise** (première icône de l'accueil) :
+
+- **Création :** seul le staff crée une entreprise, en indiquant l'identifiant du compte du patron.
+- **Grades :**
+  - **Patron :** tout gérer, nommer gérants et nouveau patron (l'ancien patron devient alors gérant), modifier le nom et le secteur.
+  - **Gérant :** gérer les employés (pas les autres gérants), les règles, les virements et les salaires.
+  - **Employé :** voir l'équipe, les règles, ses propres paiements et le tchat. Peut quitter l'entreprise.
+- **Onglets :** Aperçu, Employés (ajout par identifiant de compte, poste, salaire, grade), Virements (virement à un employé, « Payer tous les salaires », historique), Règles internes, Tchat (nouveaux messages toutes les 4 secondes) et Paramètres.
+- **Staff :** voit et gère toutes les entreprises comme un patron, crédite ou débite la trésorerie et peut supprimer une entreprise.
+
+**Important : l'argent de l'intranet n'est pas relié à la banque du jeu.** La trésorerie d'une entreprise ne bouge que par les crédits et débits du staff, les virements et les salaires. Le staff s'en sert pour refléter l'argent réel de l'entreprise en jeu.
+
 ## Espace staff
 
-L'app **Staff** (page 2 de l'accueil) demande un identifiant et un mot de passe.
+L'app **Staff** (page 2 de l'accueil) utilise les mêmes comptes que Réglages, avec le rôle Staff ou Admin.
 
 - **Compte admin :** identifiant `admin` (ou `ADMIN_IDENTIFIANT`), mot de passe = `ADMIN_MDP` du fichier `.env`.
-- **Rôle Staff :** modifie tout le contenu de la tablette (général, actualités, calendrier, entreprises, emplois, annuaire, règlement, liens) et son propre mot de passe.
-- **Rôle Admin :** pareil, plus la création, la modification et la suppression des comptes staff. Il reste toujours au moins un admin.
+- **Rôle Staff :** modifie tout le contenu de la tablette (général, actualités, calendrier, entreprises, emplois, annuaire, règlement, liens) et gère toutes les entreprises.
+- **Rôle Admin :** pareil, plus la gestion de tous les comptes (rôle, mot de passe, suppression). Il reste toujours au moins un admin.
 - Après 5 mauvais mots de passe, la connexion est bloquée 5 minutes pour cette adresse IP.
 - Le journal d'erreurs du site (Apache / PHP) note qui modifie quoi.
 

@@ -1,7 +1,9 @@
 <?php
 /*
- * Intranet Nova : API du serveur, version PHP (hébergement Web Infomaniak).
- * Même API que l'ancien server.js. Appelée via .htaccess : /api/<route> -> api.php?route=<route>.
+ * Intranet Neoran : API du serveur, version PHP (hébergement Web Infomaniak).
+ * Appelée via .htaccess : /api/<route> -> api.php?route=<route>.
+ * Comptes : joueurs, staff et admins dans data/staff.json. Entreprises : data/entreprises.json,
+ * tchats : data/tchat-<id>.json.
  * Configuration : fichier .env à côté de ce fichier (ADMIN_MDP, ADMIN_IDENTIFIANT).
  * Données : dossier data/ (protégé par .htaccess).
  */
@@ -9,8 +11,11 @@
 ini_set('display_errors', '0');
 error_reporting(E_ALL);
 
-const DUREE_SESSION = 12 * 3600;
-const ROLES = ['admin', 'staff'];
+const DUREE_SESSION = 7 * 24 * 3600;
+const ROLES = ['admin', 'staff', 'joueur'];
+const GRADES = ['patron', 'gerant', 'employe'];
+const MAX_TRANSACTIONS = 500;
+const MAX_MESSAGES = 300;
 
 // Sections modifiables et champs autorisés pour chaque élément (le reste est ignoré)
 const SECTIONS = [
@@ -119,6 +124,20 @@ function ecrireJson(string $fichier, $valeur): void
     rename($tmp, $fichier);
 }
 
+// Un seul écrivain à la fois : évite que deux requêtes simultanées s'écrasent
+function verrouiller(): void
+{
+    static $verrou = null;
+    if ($verrou !== null) {
+        return;
+    }
+    if (!is_dir(dossierData())) {
+        mkdir(dossierData(), 0700, true);
+    }
+    $verrou = fopen(fichier('verrou.lock'), 'c');
+    flock($verrou, LOCK_EX);
+}
+
 function chargerStaff(): array
 {
     return lireJson(fichier('staff.json'), []);
@@ -144,6 +163,21 @@ function verifier(string $mdp, array $compte): bool
 function publicCompte(array $c): array
 {
     return ['id' => $c['id'], 'identifiant' => $c['identifiant'], 'nom' => $c['nom'], 'role' => $c['role']];
+}
+
+// Ce que le joueur voit de son propre compte
+function detailCompte(array $c): array
+{
+    return publicCompte($c) + [
+        'telephone' => $c['telephone'] ?? '',
+        'solde' => (int) ($c['solde'] ?? 0),
+        'historique' => array_slice($c['historique'] ?? [], 0, 50),
+    ];
+}
+
+function estStaff(array $c): bool
+{
+    return in_array($c['role'] ?? '', ['admin', 'staff'], true);
 }
 
 function uuid(): string
@@ -343,12 +377,7 @@ function connexion(): void
     unset($essais[$ip]);
     ecrireJson(fichier('essais.json'), $essais);
 
-    $jeton = bin2hex(random_bytes(32));
-    $sessions = purgerSessions(lireJson(fichier('sessions.json'), []));
-    $sessions[$jeton] = ['id' => $staff[$idx]['id'], 'expire' => $maintenant + DUREE_SESSION];
-    ecrireJson(fichier('sessions.json'), $sessions);
-
-    repondre(200, ['jeton' => $jeton, 'compte' => publicCompte($staff[$idx])]);
+    repondre(200, ['jeton' => ouvrirSession($staff[$idx]['id']), 'compte' => detailCompte($staff[$idx])]);
 }
 
 function deconnexion(): void
@@ -394,6 +423,9 @@ function modifierSoi(array $moi): void
     }
     $c = $staff[$idx];
     if (!empty($corps['mdp'])) {
+        if (!verifier((string) ($corps['ancienMdp'] ?? ''), $c)) {
+            throw new ApiErreur('Le mot de passe actuel est incorrect.');
+        }
         $mdp = (string) $corps['mdp'];
         validerMdp($mdp);
         $c['hash'] = hacher($mdp);
@@ -401,9 +433,61 @@ function modifierSoi(array $moi): void
     if (!empty($corps['nom'])) {
         $c['nom'] = texte($corps['nom'], 60);
     }
+    if (array_key_exists('telephone', $corps)) {
+        $c['telephone'] = texte($corps['telephone'], 20);
+    }
     $staff[$idx] = $c;
     sauverStaff($staff);
-    repondre(200, publicCompte($c));
+    repondre(200, detailCompte($c));
+}
+
+// Création d'un compte joueur depuis Réglages (connecte directement le joueur)
+function inscription(): void
+{
+    $ip = $_SERVER['REMOTE_ADDR'] ?? 'inconnue';
+    $maintenant = time();
+    $essais = lireJson(fichier('essais.json'), []);
+    $cle = 'inscription:' . $ip;
+    $e = $essais[$cle] ?? null;
+    if ($e && $e['nombre'] >= 5 && $e['jusqua'] > $maintenant) {
+        throw new ApiErreur('Trop de comptes créés depuis cette connexion. Réessaie plus tard.', 429);
+    }
+    $corps = lireCorps();
+    $identifiant = (string) ($corps['identifiant'] ?? '');
+    $mdp = (string) ($corps['mdp'] ?? '');
+    $nom = trim(texte($corps['nom'] ?? '', 60));
+    validerIdentifiant($identifiant);
+    validerMdp($mdp);
+    if ($nom === '') {
+        throw new ApiErreur('Indique le nom de ton personnage (Prénom Nom).');
+    }
+    garantirAdmin();
+    $staff = chargerStaff();
+    if (indexParIdentifiant($staff, $identifiant) !== null) {
+        throw new ApiErreur('Cet identifiant est déjà pris.');
+    }
+    $compte = [
+        'id' => uuid(), 'identifiant' => $identifiant, 'nom' => $nom, 'role' => 'joueur',
+        'hash' => hacher($mdp), 'telephone' => texte($corps['telephone'] ?? '', 20), 'solde' => 0, 'historique' => [],
+    ];
+    $staff[] = $compte;
+    sauverStaff($staff);
+    $essais[$cle] = [
+        'nombre' => ($e && $e['jusqua'] > $maintenant) ? $e['nombre'] + 1 : 1,
+        'jusqua' => $maintenant + 3600,
+    ];
+    ecrireJson(fichier('essais.json'), $essais);
+    journal("Nouveau compte joueur « $identifiant »");
+    repondre(201, ['jeton' => ouvrirSession($compte['id']), 'compte' => detailCompte($compte)]);
+}
+
+function ouvrirSession(string $id): string
+{
+    $jeton = bin2hex(random_bytes(32));
+    $sessions = purgerSessions(lireJson(fichier('sessions.json'), []));
+    $sessions[$jeton] = ['id' => $id, 'expire' => time() + DUREE_SESSION];
+    ecrireJson(fichier('sessions.json'), $sessions);
+    return $jeton;
 }
 
 function creerCompte(array $moi): void
@@ -444,7 +528,7 @@ function modifierCompte(array $moi, array $staff, int $idx): void
         if (!in_array($corps['role'], ROLES, true)) {
             throw new ApiErreur('Rôle inconnu.');
         }
-        if ($corps['role'] === 'staff' && $c['role'] === 'admin' && nombreAdmins($staff) === 1) {
+        if ($corps['role'] !== 'admin' && $c['role'] === 'admin' && nombreAdmins($staff) === 1) {
             throw new ApiErreur('Il doit rester au moins un administrateur.');
         }
         $c['role'] = $corps['role'];
@@ -477,6 +561,389 @@ function supprimerCompte(array $moi, array $staff, int $idx): void
     repondre(200, ['ok' => true]);
 }
 
+// ---------- Gestion des entreprises ----------
+// L'argent ici est celui de l'intranet : il n'est pas relié à la banque du jeu.
+// Seul le staff peut créditer ou débiter la trésorerie d'une entreprise.
+
+function chargerEntreprises(): array
+{
+    return lireJson(fichier('entreprises.json'), []);
+}
+
+function sauverEntreprises(array $liste): void
+{
+    ecrireJson(fichier('entreprises.json'), array_values($liste));
+}
+
+function indexEntreprise(array $liste, string $id): int
+{
+    foreach ($liste as $i => $e) {
+        if ($e['id'] === $id) {
+            return $i;
+        }
+    }
+    throw new ApiErreur('Entreprise introuvable.', 404);
+}
+
+function membreDe(array $e, string $compteId): ?array
+{
+    foreach ($e['membres'] as $m) {
+        if ($m['compteId'] === $compteId) {
+            return $m;
+        }
+    }
+    return null;
+}
+
+// Le staff agit comme un patron sur toutes les entreprises
+function gradeDe(array $e, array $moi): ?string
+{
+    if (estStaff($moi)) {
+        return 'patron';
+    }
+    $m = membreDe($e, $moi['id']);
+    return $m['grade'] ?? null;
+}
+
+function exigerGrade(array $e, array $moi, array $grades): string
+{
+    $g = gradeDe($e, $moi);
+    if ($g === null) {
+        throw new ApiErreur("Tu ne fais pas partie de cette entreprise.", 403);
+    }
+    if (!in_array($g, $grades, true)) {
+        throw new ApiErreur("Ton grade ne permet pas de faire ça.", 403);
+    }
+    return $g;
+}
+
+function montant($valeur): int
+{
+    if (!is_numeric($valeur) || (float) $valeur != floor((float) $valeur) || (int) $valeur <= 0 || (int) $valeur > 100000000) {
+        throw new ApiErreur('Le montant doit être un nombre entier positif.');
+    }
+    return (int) $valeur;
+}
+
+function ajouterTransaction(array &$e, array $t): void
+{
+    array_unshift($e['transactions'], $t + ['id' => uuid(), 'date' => time()]);
+    $e['transactions'] = array_slice($e['transactions'], 0, MAX_TRANSACTIONS);
+}
+
+function crediterJoueur(array &$staff, string $compteId, int $montant, string $libelle): void
+{
+    $idx = indexParId($staff, $compteId);
+    if ($idx === null) {
+        return;
+    }
+    $staff[$idx]['solde'] = (int) ($staff[$idx]['solde'] ?? 0) + $montant;
+    $hist = $staff[$idx]['historique'] ?? [];
+    array_unshift($hist, ['date' => time(), 'montant' => $montant, 'libelle' => $libelle]);
+    $staff[$idx]['historique'] = array_slice($hist, 0, 50);
+}
+
+function resumeEntreprise(array $e, array $moi): array
+{
+    return [
+        'id' => $e['id'], 'nom' => $e['nom'], 'secteur' => $e['secteur'],
+        'monGrade' => estStaff($moi) && !membreDe($e, $moi['id']) ? 'staff' : (membreDe($e, $moi['id'])['grade'] ?? null),
+        'effectif' => count($e['membres']),
+    ];
+}
+
+function detailEntreprise(array $e, array $moi): array
+{
+    $staff = chargerStaff();
+    $noms = [];
+    foreach ($staff as $c) {
+        $noms[$c['id']] = ['nom' => $c['nom'], 'identifiant' => $c['identifiant'], 'telephone' => $c['telephone'] ?? ''];
+    }
+    $grade = gradeDe($e, $moi);
+    $gere = in_array($grade, ['patron', 'gerant'], true);
+    $membres = array_map(fn($m) => $m + ($noms[$m['compteId']] ?? ['nom' => 'Compte supprimé', 'identifiant' => '', 'telephone' => '']), $e['membres']);
+    // Un employé ne voit que les mouvements qui le concernent
+    $transactions = $gere ? $e['transactions'] : array_values(array_filter($e['transactions'], fn($t) => ($t['vers'] ?? null) === $moi['id']));
+    foreach ($transactions as &$t) {
+        $t['versNom'] = isset($t['vers']) ? ($noms[$t['vers']]['nom'] ?? 'Compte supprimé') : null;
+        $t['parNom'] = $noms[$t['par']]['nom'] ?? 'Compte supprimé';
+    }
+    return resumeEntreprise($e, $moi) + [
+        'solde' => $gere ? (int) $e['solde'] : null,
+        'regles' => $e['regles'],
+        'membres' => $membres,
+        'transactions' => $transactions,
+        'peutGerer' => $gere,
+        'estStaff' => estStaff($moi),
+    ];
+}
+
+function routesEntreprises(string $methode, string $route, array $moi): void
+{
+    if ($route === 'entreprises' && $methode === 'GET') {
+        $liste = array_filter(chargerEntreprises(), fn($e) => estStaff($moi) || membreDe($e, $moi['id']));
+        repondre(200, array_values(array_map(fn($e) => resumeEntreprise($e, $moi), $liste)));
+    }
+    if ($route === 'entreprises' && $methode === 'POST') {
+        if (!estStaff($moi)) {
+            throw new ApiErreur('Seul le staff peut créer une entreprise.', 403);
+        }
+        $corps = lireCorps();
+        $nom = trim(texte($corps['nom'] ?? '', 60));
+        if ($nom === '') {
+            throw new ApiErreur("Indique le nom de l'entreprise.");
+        }
+        $membres = [];
+        $patron = trim((string) ($corps['patron'] ?? ''));
+        if ($patron !== '') {
+            $staff = chargerStaff();
+            $idx = indexParIdentifiant($staff, $patron);
+            if ($idx === null) {
+                throw new ApiErreur("Aucun compte avec l'identifiant « $patron ».");
+            }
+            $membres[] = ['compteId' => $staff[$idx]['id'], 'grade' => 'patron', 'poste' => 'Patron', 'salaire' => 0];
+        }
+        $liste = chargerEntreprises();
+        $e = ['id' => uuid(), 'nom' => $nom, 'secteur' => texte($corps['secteur'] ?? '', 60), 'solde' => 0,
+            'creeLe' => time(), 'membres' => $membres, 'regles' => [], 'transactions' => []];
+        $liste[] = $e;
+        sauverEntreprises($liste);
+        journal("{$moi['identifiant']} a créé l'entreprise « $nom »");
+        repondre(201, detailEntreprise($e, $moi));
+    }
+
+    if (!preg_match('#^entreprises/([\w-]+)(?:/([a-z]+))?(?:/([\w-]+))?$#', $route, $m)) {
+        return;
+    }
+    [$id, $sous, $cible] = [$m[1], $m[2] ?? '', $m[3] ?? ''];
+    $liste = chargerEntreprises();
+    $i = indexEntreprise($liste, $id);
+    $e = $liste[$i];
+
+    // Tchat : lecture et envoi pour tous les membres
+    if ($sous === 'tchat') {
+        exigerGrade($e, $moi, GRADES);
+        $f = fichier("tchat-$id.json");
+        if ($methode === 'GET') {
+            $depuis = (int) ($_GET['depuis'] ?? 0);
+            $messages = array_values(array_filter(lireJson($f, []), fn($msg) => $msg['t'] > $depuis));
+            repondre(200, $messages);
+        }
+        if ($methode === 'POST') {
+            $txt = trim(texte(lireCorps()['texte'] ?? '', 500));
+            if ($txt === '') {
+                throw new ApiErreur('Le message est vide.');
+            }
+            $messages = lireJson($f, []);
+            $dernier = end($messages);
+            $t = (int) round(microtime(true) * 1000);
+            if ($dernier && $dernier['t'] >= $t) {
+                $t = $dernier['t'] + 1;
+            }
+            $msg = ['id' => uuid(), 't' => $t, 'auteurId' => $moi['id'], 'nom' => $moi['nom'], 'texte' => $txt,
+                'staff' => estStaff($moi) && !membreDe($e, $moi['id'])];
+            $messages[] = $msg;
+            ecrireJson($f, array_slice($messages, -MAX_MESSAGES));
+            repondre(201, $msg);
+        }
+    }
+
+    if ($sous === '' && $methode === 'GET') {
+        exigerGrade($e, $moi, GRADES);
+        repondre(200, detailEntreprise($e, $moi));
+    }
+    if ($sous === '' && $methode === 'PUT') {
+        exigerGrade($e, $moi, ['patron']);
+        $corps = lireCorps();
+        if (isset($corps['nom']) && trim((string) $corps['nom']) !== '') {
+            $e['nom'] = trim(texte($corps['nom'], 60));
+        }
+        if (isset($corps['secteur'])) {
+            $e['secteur'] = texte($corps['secteur'], 60);
+        }
+        $liste[$i] = $e;
+        sauverEntreprises($liste);
+        repondre(200, detailEntreprise($e, $moi));
+    }
+    if ($sous === '' && $methode === 'DELETE') {
+        if (!estStaff($moi)) {
+            throw new ApiErreur('Seul le staff peut supprimer une entreprise.', 403);
+        }
+        unset($liste[$i]);
+        sauverEntreprises($liste);
+        @unlink(fichier("tchat-$id.json"));
+        journal("{$moi['identifiant']} a supprimé l'entreprise « {$e['nom']} »");
+        repondre(200, ['ok' => true]);
+    }
+
+    if ($sous === 'regles' && $methode === 'PUT') {
+        exigerGrade($e, $moi, ['patron', 'gerant']);
+        $regles = lireCorps()['regles'] ?? [];
+        $regles = estListe($regles) ? $regles : [];
+        $e['regles'] = array_values(array_filter(array_map(fn($r) => trim(texte($r, 500)), array_slice($regles, 0, 50)), fn($r) => $r !== ''));
+        $liste[$i] = $e;
+        sauverEntreprises($liste);
+        repondre(200, detailEntreprise($e, $moi));
+    }
+
+    if ($sous === 'membres') {
+        $monGrade = exigerGrade($e, $moi, GRADES);
+        $corps = $methode === 'DELETE' ? [] : lireCorps();
+        $poste = texte($corps['poste'] ?? '', 40);
+        $salaire = isset($corps['salaire']) && $corps['salaire'] !== '' ? (int) max(0, min(100000000, (int) $corps['salaire'])) : null;
+        $grade = $corps['grade'] ?? null;
+        if ($grade !== null && !in_array($grade, GRADES, true)) {
+            throw new ApiErreur('Grade inconnu.');
+        }
+        // Un gérant ne gère que les employés ; seul le patron (ou le staff) nomme gérants et patron
+        $gererCible = function (?array $membre) use ($monGrade, $grade) {
+            if ($monGrade === 'patron') {
+                return;
+            }
+            if ($monGrade !== 'gerant' || ($membre && $membre['grade'] !== 'employe') || ($grade && $grade !== 'employe')) {
+                throw new ApiErreur('Ton grade ne permet pas de faire ça.', 403);
+            }
+        };
+
+        if ($methode === 'POST' && $cible === '') {
+            $staff = chargerStaff();
+            $idx = indexParIdentifiant($staff, (string) ($corps['identifiant'] ?? ''));
+            if ($idx === null) {
+                throw new ApiErreur("Aucun compte avec cet identifiant. Le joueur doit d'abord créer son compte dans Réglages.");
+            }
+            if (membreDe($e, $staff[$idx]['id'])) {
+                throw new ApiErreur('Ce joueur fait déjà partie de l\'entreprise.');
+            }
+            if (count($e['membres']) >= 100) {
+                throw new ApiErreur('100 employés maximum.');
+            }
+            $grade = $grade ?? 'employe';
+            $gererCible(null);
+            if ($grade === 'patron') {
+                foreach ($e['membres'] as &$mb) {
+                    if ($mb['grade'] === 'patron') {
+                        $mb['grade'] = 'gerant';
+                    }
+                }
+                unset($mb);
+            }
+            $e['membres'][] = ['compteId' => $staff[$idx]['id'], 'grade' => $grade, 'poste' => $poste !== '' ? $poste : ucfirst($grade === 'gerant' ? 'gérant' : $grade), 'salaire' => $salaire ?? 0];
+        } else {
+            $k = null;
+            foreach ($e['membres'] as $n => $mb) {
+                if ($mb['compteId'] === $cible) {
+                    $k = $n;
+                }
+            }
+            if ($k === null) {
+                throw new ApiErreur('Employé introuvable.', 404);
+            }
+            if ($methode === 'DELETE') {
+                // Chacun peut quitter l'entreprise, sauf le patron (il doit d'abord passer la main)
+                if ($cible === $moi['id'] && $e['membres'][$k]['grade'] !== 'patron') {
+                    // départ volontaire
+                } else {
+                    $gererCible($e['membres'][$k]);
+                    if ($e['membres'][$k]['grade'] === 'patron' && !estStaff($moi)) {
+                        throw new ApiErreur("Le patron ne peut pas être retiré. Nomme d'abord un autre patron.");
+                    }
+                }
+                array_splice($e['membres'], $k, 1);
+            } elseif ($methode === 'PUT') {
+                $gererCible($e['membres'][$k]);
+                if ($grade === 'patron') {
+                    foreach ($e['membres'] as $n => $mb) {
+                        if ($mb['grade'] === 'patron') {
+                            $e['membres'][$n]['grade'] = 'gerant';
+                        }
+                    }
+                }
+                if ($grade !== null) {
+                    $e['membres'][$k]['grade'] = $grade;
+                }
+                if ($poste !== '') {
+                    $e['membres'][$k]['poste'] = $poste;
+                }
+                if ($salaire !== null) {
+                    $e['membres'][$k]['salaire'] = $salaire;
+                }
+            } else {
+                throw new ApiErreur('Route inconnue.', 404);
+            }
+        }
+        $liste[$i] = $e;
+        sauverEntreprises($liste);
+        repondre(200, detailEntreprise($e, $moi));
+    }
+
+    if ($sous === 'virements' && $methode === 'POST') {
+        exigerGrade($e, $moi, ['patron', 'gerant']);
+        $corps = lireCorps();
+        $somme = montant($corps['montant'] ?? null);
+        $membre = membreDe($e, (string) ($corps['vers'] ?? ''));
+        if (!$membre) {
+            throw new ApiErreur('Choisis un employé de l\'entreprise.');
+        }
+        if ($somme > $e['solde']) {
+            throw new ApiErreur("Solde insuffisant ({$e['solde']} € disponibles).");
+        }
+        $motif = trim(texte($corps['motif'] ?? '', 100)) ?: 'Virement';
+        $e['solde'] -= $somme;
+        ajouterTransaction($e, ['type' => 'virement', 'montant' => $somme, 'vers' => $membre['compteId'], 'motif' => $motif, 'par' => $moi['id']]);
+        $staff = chargerStaff();
+        crediterJoueur($staff, $membre['compteId'], $somme, "{$e['nom']} : $motif");
+        sauverStaff($staff);
+        $liste[$i] = $e;
+        sauverEntreprises($liste);
+        repondre(200, detailEntreprise($e, $moi));
+    }
+
+    if ($sous === 'salaires' && $methode === 'POST') {
+        exigerGrade($e, $moi, ['patron', 'gerant']);
+        $aPayer = array_filter($e['membres'], fn($mb) => $mb['salaire'] > 0);
+        $total = array_sum(array_column($aPayer, 'salaire'));
+        if ($total === 0) {
+            throw new ApiErreur("Aucun salaire n'est défini. Indique un salaire dans la fiche de chaque employé.");
+        }
+        if ($total > $e['solde']) {
+            throw new ApiErreur("Solde insuffisant : il faut $total € et l'entreprise a {$e['solde']} €.");
+        }
+        $staff = chargerStaff();
+        foreach ($aPayer as $mb) {
+            $e['solde'] -= $mb['salaire'];
+            ajouterTransaction($e, ['type' => 'salaire', 'montant' => $mb['salaire'], 'vers' => $mb['compteId'], 'motif' => 'Salaire', 'par' => $moi['id']]);
+            crediterJoueur($staff, $mb['compteId'], $mb['salaire'], "{$e['nom']} : salaire");
+        }
+        sauverStaff($staff);
+        $liste[$i] = $e;
+        sauverEntreprises($liste);
+        repondre(200, detailEntreprise($e, $moi));
+    }
+
+    if ($sous === 'tresorerie' && $methode === 'POST') {
+        if (!estStaff($moi)) {
+            throw new ApiErreur('Seul le staff peut créditer ou débiter une entreprise.', 403);
+        }
+        $corps = lireCorps();
+        $somme = montant($corps['montant'] ?? null);
+        $type = $corps['type'] ?? '';
+        if (!in_array($type, ['depot', 'retrait'], true)) {
+            throw new ApiErreur('Type inconnu.');
+        }
+        if ($type === 'retrait' && $somme > $e['solde']) {
+            throw new ApiErreur("Solde insuffisant ({$e['solde']} € disponibles).");
+        }
+        $e['solde'] += $type === 'depot' ? $somme : -$somme;
+        ajouterTransaction($e, ['type' => $type, 'montant' => $somme, 'motif' => trim(texte($corps['motif'] ?? '', 100)) ?: ($type === 'depot' ? 'Dépôt' : 'Retrait'), 'par' => $moi['id']]);
+        $liste[$i] = $e;
+        sauverEntreprises($liste);
+        journal("{$moi['identifiant']} : $type de $somme € sur « {$e['nom']} »");
+        repondre(200, detailEntreprise($e, $moi));
+    }
+
+    throw new ApiErreur('Route inconnue.', 404);
+}
+
 function dispatch(): void
 {
     if (!is_dir(dossierData())) {
@@ -484,6 +951,9 @@ function dispatch(): void
     }
     $methode = $_SERVER['REQUEST_METHOD'] ?? 'GET';
     $route = trim((string) ($_GET['route'] ?? ''), '/');
+    if ($methode !== 'GET') {
+        verrouiller();
+    }
 
     // Routes publiques
     if ($methode === 'GET' && $route === 'contenu') {
@@ -492,8 +962,11 @@ function dispatch(): void
     if ($methode === 'POST' && $route === 'connexion') {
         connexion();
     }
+    if ($methode === 'POST' && $route === 'inscription') {
+        inscription();
+    }
 
-    // Routes qui demandent une session
+    // Routes qui demandent une session (joueurs, staff et admins)
     $moi = compteDepuisRequete();
     if ($moi === null) {
         throw new ApiErreur('Session expirée. Reconnecte-toi.', 401);
@@ -502,7 +975,18 @@ function dispatch(): void
         deconnexion();
     }
     if ($methode === 'GET' && $route === 'moi') {
-        repondre(200, publicCompte($moi));
+        repondre(200, detailCompte($moi));
+    }
+    if ($methode === 'PUT' && $route === 'moi') {
+        modifierSoi($moi);
+    }
+    if (strncmp($route, 'entreprises', 11) === 0) {
+        routesEntreprises($methode, $route, $moi);
+    }
+
+    // Contenu de la tablette et liste des comptes : staff et admins
+    if (!estStaff($moi)) {
+        throw new ApiErreur('Réservé au staff.', 403);
     }
     if ($methode === 'PUT' && preg_match('#^contenu/([a-z]+)$#', $route, $m)) {
         modifierContenu($m[1], $moi);

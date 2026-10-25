@@ -65,7 +65,7 @@ input, textarea { font: inherit; color: inherit; user-select: text; }
 .icon .tile svg { width: 44px; height: 44px; position: relative; z-index: 1; }
 .icon:hover .tile { filter: brightness(1.08); }
 .icon:active .tile { transform: scale(.9); filter: brightness(.85); }
-.icon .label { font-size: 13px; font-weight: 600; text-shadow: 0 1px 3px rgba(0, 0, 0, .45); white-space: nowrap; max-width: 110px; overflow: hidden; text-overflow: ellipsis; }
+.icon .label { font-size: 13px; font-weight: 600; line-height: 1.15; text-align: center; text-shadow: 0 1px 3px rgba(0, 0, 0, .45); max-width: 110px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 .icon .dot-badge { position: absolute; top: -4px; right: -4px; z-index: 2; }
 .icon .tile-wrap { position: relative; }
 
@@ -197,6 +197,63 @@ details.rule ol { margin: 0 0 16px; padding-left: 22px; display: flex; flex-dire
 .walls .sw { width: 92px; height: 64px; border-radius: 12px; border: 2px solid transparent; }
 .walls button.on .sw { border-color: #fff; }
 
+/* Réglages façon iPad */
+.split-set { display: grid; grid-template-columns: minmax(0, 320px) minmax(0, 1fr); gap: 24px; align-items: start; }
+.set-detail:empty { display: none; }
+.banner { display: flex; align-items: center; gap: 14px; width: 100%; text-align: left; padding: 14px 16px; border-radius: 14px; background: var(--app-panel); }
+.banner strong { display: block; font-size: 17px; }
+.banner small { display: block; color: var(--ink-soft); font-size: 13px; }
+.banner .grow { flex: 1; min-width: 0; }
+.banner .end { color: var(--ink-soft); }
+.banner.sel, .row.sel { background: rgba(139, 116, 255, .2); }
+.avatar.big { width: 56px; height: 56px; font-size: 20px; }
+.avatar.big svg { width: 30px; height: 30px; }
+.avatar.huge { width: 88px; height: 88px; font-size: 32px; }
+.mini-ico { flex: none; width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; }
+.mini-ico svg { width: 18px; height: 18px; }
+.profile-head { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 6px; margin-bottom: 18px; }
+.profile-head h2 { margin: 6px 0 0; font-size: 24px; }
+.auth-logo { width: 64px; height: 64px; border-radius: 18px; margin: 0 auto; display: grid; place-items: center; background: linear-gradient(160deg, #7c6cff, #3b2bb5); }
+.auth-logo svg { width: 36px; height: 36px; }
+.money-card { border-radius: 18px; padding: 22px 24px; background: linear-gradient(135deg, #1f8a5b, #0d5c3c); display: flex; flex-direction: column; gap: 4px; }
+.money-card small { opacity: .8; font-weight: 600; }
+.money-card strong { font-size: 38px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.money-card span { opacity: .8; font-size: 13px; }
+@media (min-width: 761px) { .back.narrow-only { display: none; } }
+
+/* Gestion entreprise */
+.head-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+.head-row h2 { margin: 0; font-size: 22px; }
+.ent-head { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 18px; }
+.ent-head .grow { flex: 1; min-width: 0; }
+.ent-head h2 { margin: 0; font-size: 24px; }
+.ent-head .meta { color: var(--ink-soft); font-size: 13px; display: flex; gap: 8px; align-items: center; margin-top: 2px; }
+.ent-solde { text-align: right; }
+.ent-solde small { display: block; color: var(--ink-soft); font-size: 12px; font-weight: 600; }
+.ent-solde strong { font-size: 26px; font-variant-numeric: tabular-nums; }
+.segmented { display: flex; gap: 2px; padding: 3px; border-radius: 11px; background: rgba(255, 255, 255, .08); margin-bottom: 16px; overflow-x: auto; scrollbar-width: none; }
+.segmented button { flex: 1 0 auto; padding: 7px 14px; border-radius: 9px; font-size: 14px; font-weight: 600; color: var(--ink-soft); white-space: nowrap; }
+.segmented button[aria-selected="true"] { background: rgba(255, 255, 255, .16); color: var(--ink); box-shadow: 0 1px 4px rgba(0, 0, 0, .3); }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+.stat { background: var(--app-panel); border-radius: 14px; padding: 14px 16px; }
+.stat small { display: block; color: var(--ink-soft); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+.stat strong { font-size: 24px; font-variant-numeric: tabular-nums; }
+.two-col { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; align-items: start; }
+.two-col .form { max-width: none; }
+.form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.inline-form { max-width: none; }
+.row.wrap { flex-wrap: wrap; }
+ol.rules { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 8px; }
+.chat { display: flex; flex-direction: column; gap: 10px; background: var(--app-panel); border-radius: 16px; padding: 12px; }
+.chat-list { height: min(52vh, 460px); overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding: 4px; }
+.bubble { max-width: min(75%, 520px); align-self: flex-start; background: rgba(255, 255, 255, .09); border-radius: 16px 16px 16px 4px; padding: 8px 12px; display: flex; flex-direction: column; gap: 2px; overflow-wrap: anywhere; }
+.bubble.me { align-self: flex-end; background: var(--accent); border-radius: 16px 16px 4px 16px; }
+.bubble b { font-size: 12px; color: #c9bfff; }
+.bubble time { font-size: 11px; opacity: .65; align-self: flex-end; }
+.chat-input { display: flex; gap: 8px; }
+.chat-input input { flex: 1; min-width: 0; background: rgba(255, 255, 255, .07); border: 1px solid var(--app-line); border-radius: 20px; padding: 10px 14px; outline: none; }
+.chat-input input:focus { border-color: var(--accent); }
+
 /* Recherche (Spotlight) */
 .spot { position: absolute; inset: 0; z-index: 30; background: rgba(10, 6, 30, .45); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); display: flex; justify-content: center; padding: 70px 16px 16px; }
 .spot-box { width: min(640px, 100%); display: flex; flex-direction: column; gap: 14px; min-height: 0; }
@@ -211,7 +268,9 @@ details.rule ol { margin: 0 0 16px; padding-left: 22px; display: flex; flex-dire
 .spot .section-title { margin: 12px 4px 6px; color: rgba(255, 255, 255, .7); }
 
 @media (max-width: 760px) {
-  .split, .notes { grid-template-columns: minmax(0, 1fr); }
+  .split, .notes, .split-set { grid-template-columns: minmax(0, 1fr); }
+  .split-set.has-detail .set-list { display: none; }
+  .split-set:not(.has-detail) .set-detail { display: none; }
   .widget.wide { grid-column: 1 / -1; }
   .grid { grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 14px 12px; }
   .icon .tile { width: 62px; height: 62px; }
@@ -295,7 +354,7 @@ details.rule ol { margin: 0 0 16px; padding-left: 22px; display: flex; flex-dire
 const DEFAUT = {
   serveur: "Nova",
   ville: "Amboise",
-  discord: "https://discord.gg/ton-invitation",
+  discord: "https://discord.gg/x4FD58dxBU",
 
   actualites: [
     { exemple: true, titre: "Le garage Martin ouvre ses portes", date: "2026-10-24", auteur: "Mairie d'Amboise", texte: "Le nouveau garage de la zone industrielle propose réparations, entretien et personnalisation. Rendez-vous possibles tous les soirs à partir de 19 h." },
@@ -338,7 +397,7 @@ const DEFAUT = {
   ],
 
   liens: [
-    { nom: "Discord du serveur", url: "https://discord.gg/ton-invitation", description: "Annonces, candidatures et support." },
+    { nom: "Discord du serveur", url: "https://discord.gg/x4FD58dxBU", description: "Annonces, candidatures et support." },
   ],
 };
 // Contenu affiché : les valeurs ci-dessus, remplacées par ce que le staff enregistre depuis l'app Staff
@@ -359,6 +418,11 @@ const GLYPHS = {
   reglages: S('<circle cx="12" cy="12" r="3"/><path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M5.5 18.5l1.7-1.7M16.8 7.2l1.7-1.7"/>', 'stroke-width="2"'),
   liens: S('<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>', 'stroke-width="2.2"'),
   staff: S('<rect x="5" y="10.5" width="14" height="10" rx="2.5" fill="rgba(255,255,255,.22)"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/><circle cx="12" cy="15.5" r="1.3" fill="#fff"/>', 'stroke-width="2"'),
+  gestion: S('<rect x="3.5" y="7.5" width="17" height="12.5" rx="2.5" fill="rgba(255,255,255,.2)"/><path d="M9 7.5V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1.5"/><path d="M7.5 16.5l3-3 2.2 2.2 3.8-3.8"/>', 'stroke-width="2"'),
+  compte: S('<circle cx="12" cy="8.5" r="3.6"/><path d="M5 19.5c1.2-3.3 3.8-5 7-5s5.8 1.7 7 5"/>', 'stroke-width="2"'),
+  argent: S('<rect x="3.5" y="6.5" width="17" height="12" rx="2.5"/><path d="M3.5 10.5h17M7 15h4"/>', 'stroke-width="2"'),
+  fond: S('<rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><path d="m4 16 5-5 4 4 2.5-2.5L20 17"/><circle cx="15.5" cy="9" r="1.4"/>', 'stroke-width="2"'),
+  info: S('<circle cx="12" cy="12" r="8.5"/><path d="M12 11v5.5"/><circle cx="12" cy="7.8" r=".8" fill="#fff"/>', 'stroke-width="2"'),
   support: S('<circle cx="12" cy="12" r="8.5" fill="rgba(255,255,255,.2)"/><path d="M9.6 9.4a2.5 2.5 0 0 1 4.8 1c0 1.7-2.4 2.1-2.4 3.6"/><circle cx="12" cy="17" r=".7" fill="#fff"/>', 'stroke-width="2"'),
 };
 
@@ -374,9 +438,10 @@ const APPS = [
   { id: "calculatrice", nom: "Calculatrice", bg: "linear-gradient(160deg,#4b4b4f,#1d1d20)" },
   { id: "notes", nom: "Notes", bg: "linear-gradient(160deg,#ffe066,#f5b700)" },
   { id: "reglages", nom: "Réglages", bg: "linear-gradient(160deg,#a3a7b3,#62666f)" },
+  { id: "gestion", nom: "Gestion entreprise", bg: "linear-gradient(160deg,#7c6cff,#3b2bb5)" },
   { id: "staff", nom: "Staff", bg: "linear-gradient(160deg,#3b3f58,#14162a)" },
 ];
-const PAGE1 = ["entreprises", "emplois", "calendrier", "reglement", "support", "liens"];
+const PAGE1 = ["gestion", "entreprises", "emplois", "calendrier", "reglement", "support", "liens"];
 const PAGE2 = ["calculatrice", "annuaire", "actualites", "staff"];
 const DOCK = ["actualites", "annuaire", "notes", "reglages"];
 
@@ -528,6 +593,7 @@ function openApp(id, sourceEl) {
 }
 function closeApp() {
   if (win.hidden) return;
+  clearInterval(tchatMinuteur);
   const done = () => { win.hidden = true; win.classList.remove("anim"); win.style.transform = ""; win.style.borderRadius = ""; win.style.opacity = ""; $("#app-body").innerHTML = ""; current = null; };
   if (fromRect && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
     win.classList.add("anim");
@@ -536,11 +602,13 @@ function closeApp() {
   } else done();
 }
 function setView(html, opts = {}) {
+  clearInterval(tchatMinuteur);
   $("#app-body").innerHTML = `<div class="app-inner">${html}</div>`;
   $("#app-body").scrollTop = 0;
   const back = $("#app-back");
   back.hidden = !opts.back;
   back.onclick = opts.back || null;
+  back.classList.toggle("narrow-only", !!opts.etroitSeulement);
 }
 
 document.addEventListener("click", (e) => {
@@ -572,7 +640,7 @@ function renderApp(id) {
   ({
     actualites: appActualites, annuaire: appAnnuaire, entreprises: appEntreprises, emplois: appEmplois,
     calendrier: appCalendrier, reglement: appReglement, support: appSupport, liens: appLiens,
-    calculatrice: appCalculatrice, notes: appNotes, reglages: appReglages, staff: appStaff,
+    calculatrice: appCalculatrice, notes: appNotes, reglages: () => appReglages(null), staff: appStaff, gestion: appGestion,
   })[id]();
 }
 
@@ -689,19 +757,159 @@ function appliquerFond(k) {
   const r = document.documentElement.style;
   r.setProperty("--w1", f.w1); r.setProperty("--w2", f.w2); r.setProperty("--w3", f.w3);
 }
-function appReglages() {
-  const actuel = store.get("fond", "violet");
-  setView(`<div class="section-title">Fond d'écran</div><div class="list"><div class="walls">${Object.entries(FONDS).map(([k, f]) => `<button type="button" data-fond="${k}" class="${k === actuel ? "on" : ""}"><span class="sw" style="background:linear-gradient(135deg,${f.w1},${f.w2} 55%,${f.w3})"></span>${esc(f.nom)}</button>`).join("")}</div></div>
-    <div class="section-title">À propos</div><div class="list">
-      <div class="row"><span class="grow"><strong>Serveur</strong></span><span class="end">${esc(INTRANET.serveur)}</span></div>
-      <div class="row"><span class="grow"><strong>Ville</strong></span><span class="end">${esc(INTRANET.ville)}</span></div>
-      <div class="row"><span class="grow"><strong>Contenu</strong><small>Les éléments marqués « Exemple » sont à remplacer par les vraies infos du serveur.</small></span></div>
-    </div>`);
-  $("#app-body").querySelectorAll("[data-fond]").forEach((b) => (b.onclick = () => { store.set("fond", b.dataset.fond); appliquerFond(b.dataset.fond); appReglages(); }));
+
+/* =====================================================================
+   COMPTE NEORAN (session partagée par Réglages, Gestion entreprise et Staff)
+   ===================================================================== */
+let session = (() => { try { return JSON.parse(localStorage.getItem("intranet.session")); } catch { return null; } })();
+const sauverSession = () => { try { session ? localStorage.setItem("intranet.session", JSON.stringify(session)) : localStorage.removeItem("intranet.session"); } catch {} };
+const estStaffCompte = (c) => !!c && (c.role === "admin" || c.role === "staff");
+const euros = (n) => new Intl.NumberFormat("fr-FR").format(n || 0) + " €";
+const dateHeure = (ts) => { const d = new Date(ts * 1000); return `${d.getDate()} ${MOIS_COURT[d.getMonth()]} · ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`; };
+const ROLES_NOM = { admin: "Administrateur", staff: "Staff", joueur: "Joueur" };
+
+async function api(methode, chemin, donnees) {
+  let r;
+  try {
+    r = await fetch("api/" + chemin, {
+      method: methode,
+      headers: { "Content-Type": "application/json", ...(session ? { Authorization: "Bearer " + session.jeton } : {}) },
+      body: donnees === undefined ? undefined : JSON.stringify(donnees),
+    });
+  } catch {
+    throw new Error("Serveur de l'intranet injoignable. Les comptes ne marchent que si le site est en ligne.");
+  }
+  const j = await r.json().catch(() => ({}));
+  if (r.status === 401 && !["connexion", "inscription"].includes(chemin)) { session = null; sauverSession(); }
+  if (!r.ok) throw new Error(j.erreur || "Le serveur a refusé la demande.");
+  return j;
+}
+async function rafraichirCompte() {
+  if (!session) return;
+  try { session.compte = await api("GET", "moi"); sauverSession(); } catch {}
+}
+
+const message = (texte, ok) => { const m = $("#staff-msg"); if (m) { m.textContent = texte; m.className = "msg " + (ok ? "ok" : "ko"); } };
+async function avecMessage(bouton, action) {
+  const connecte = !!session, app = current;
+  if (bouton) bouton.disabled = true;
+  // Si la session a expiré pendant l'action, on revient à l'écran de connexion de l'app
+  try { await action(); } catch (e) { message(e.message, false); if (connecte && !session) setTimeout(() => { if (current === app) renderApp(app); }, 1200); } finally { if (bouton) bouton.disabled = false; }
+}
+
+// Formulaire de connexion / création de compte, réutilisé par Réglages, Gestion entreprise et Staff
+function formConnexion(apres, mode = "connexion") {
+  const insc = mode === "inscription";
+  return {
+    html: `<form class="detail form" id="auth-form" style="max-width:440px;margin:0 auto">
+      <div class="auth-logo">${GLYPHS.compte}</div>
+      <h2 style="text-align:center">${insc ? "Créer un compte Neoran" : "Connexion à Neoran"}</h2>
+      <p class="meta" style="margin:0;text-align:center">${insc ? "Un compte par personnage : il sert pour ton entreprise, tes virements et l'intranet." : "Connecte-toi pour accéder à ton entreprise, tes virements et ton profil."}</p>
+      ${insc ? `<label class="field" for="auth-nom"><span>Nom du personnage (Prénom Nom)</span><input id="auth-nom" required autocomplete="off"></label>` : ""}
+      <label class="field" for="auth-id"><span>Identifiant</span><input id="auth-id" autocomplete="username" required></label>
+      <label class="field" for="auth-mdp"><span>Mot de passe${insc ? " (8 caractères minimum)" : ""}</span><input id="auth-mdp" type="password" autocomplete="${insc ? "new-password" : "current-password"}" required></label>
+      ${insc ? `<label class="field" for="auth-tel"><span>Numéro de téléphone en jeu (facultatif)</span><input id="auth-tel" autocomplete="off"></label>` : ""}
+      <p class="msg" id="staff-msg"></p>
+      <button class="btn" type="submit">${insc ? "Créer mon compte" : "Se connecter"}</button>
+      <button class="btn ghost" type="button" id="auth-switch">${insc ? "J'ai déjà un compte" : "Créer un compte"}</button>
+    </form>`,
+    brancher(rendre) {
+      $("#auth-switch").onclick = () => rendre(insc ? "connexion" : "inscription");
+      $("#auth-form").onsubmit = (e) => {
+        e.preventDefault();
+        avecMessage(e.submitter, async () => {
+          const donnees = { identifiant: $("#auth-id").value.trim(), mdp: $("#auth-mdp").value };
+          if (insc) Object.assign(donnees, { nom: $("#auth-nom").value.trim(), telephone: $("#auth-tel").value.trim() });
+          session = await api("POST", insc ? "inscription" : "connexion", donnees);
+          sauverSession(); apres();
+        });
+      };
+    },
+  };
+}
+function vueConnexion(apres, opts = {}, mode = "connexion") {
+  const f = formConnexion(apres, mode);
+  setView((opts.avant || "") + f.html, opts);
+  f.brancher((m) => vueConnexion(apres, opts, m));
 }
 
 /* =====================================================================
-   ESPACE STAFF (nécessite le serveur server.js)
+   RÉGLAGES (comme sur iPad : compte en haut, rubriques à gauche, détail à droite)
+   ===================================================================== */
+let rubrique = null;
+function appReglages(r = rubrique) {
+  rubrique = r;
+  const c = session?.compte;
+  const ligne = (k, nom, couleurIcone, glyphe, fin = "") => `<button class="row${rubrique === k ? " sel" : ""}" type="button" data-rub="${k}"><span class="mini-ico" style="background:${couleurIcone}">${glyphe}</span><span class="grow"><strong>${nom}</strong></span><span class="end">${fin} ›</span></button>`;
+  const banniere = c
+    ? `<button class="banner${rubrique === "compte" ? " sel" : ""}" type="button" data-rub="compte"><span class="avatar big" style="background:${couleur(c.nom)}">${esc(initiales(c.nom))}</span><span class="grow"><strong>${esc(c.nom)}</strong><small>Compte Neoran, profil, sécurité</small></span><span class="end">›</span></button>`
+    : `<button class="banner${rubrique === "compte" ? " sel" : ""}" type="button" data-rub="compte"><span class="avatar big" style="background:#6b7086">${GLYPHS.compte}</span><span class="grow"><strong>Se connecter</strong><small>Accède à ton entreprise, tes virements et ton profil.</small></span><span class="end">›</span></button>`;
+  const liste = `${banniere}
+    <div class="list" style="margin-top:18px">${c ? ligne("argent", "Portefeuille", "linear-gradient(160deg,#5be29b,#13a05a)", GLYPHS.argent, euros(c.solde)) : ""}${ligne("fond", "Fond d'écran", "linear-gradient(160deg,#5ea8ff,#2563eb)", GLYPHS.fond)}${ligne("apropos", "À propos", "linear-gradient(160deg,#a3a7b3,#62666f)", GLYPHS.info)}</div>`;
+  setView(`<div class="split-set${rubrique ? " has-detail" : ""}"><div class="set-list">${liste}</div><div class="set-detail" id="set-detail"></div></div>`,
+    rubrique ? { back: () => appReglages(null), etroitSeulement: true } : {});
+  $("#app-body").querySelectorAll("[data-rub]").forEach((b) => (b.onclick = () => appReglages(b.dataset.rub)));
+  const zone = $("#set-detail");
+  const r2 = rubrique || (matchMedia("(min-width: 761px)").matches ? "compte" : null);
+  if (!r2) return;
+  if (!rubrique) $(`[data-rub="${r2}"]`)?.classList.add("sel");
+  ({ compte: reglageCompte, argent: reglageArgent, fond: reglageFond, apropos: reglageApropos })[r2](zone);
+}
+
+function reglageCompte(zone) {
+  const c = session?.compte;
+  if (!c) {
+    const rendre = (mode) => { const f = formConnexion(() => appReglages("compte"), mode); zone.innerHTML = f.html; f.brancher(rendre); };
+    return rendre("connexion");
+  }
+  zone.innerHTML = `<div class="profile-head"><span class="avatar huge" style="background:${couleur(c.nom)}">${esc(initiales(c.nom))}</span><h2>${esc(c.nom)}</h2><div class="meta">${esc(c.identifiant)} · ${ROLES_NOM[c.role] || c.role}</div></div>
+    <form class="detail form" id="prof-form"><div class="section-title" style="margin:0">Profil</div>
+      <label class="field" for="prof-nom"><span>Nom du personnage</span><input id="prof-nom" value="${esc(c.nom)}"></label>
+      <label class="field" for="prof-tel"><span>Téléphone en jeu</span><input id="prof-tel" value="${esc(c.telephone)}"></label>
+      <button class="btn" type="submit">Enregistrer le profil</button></form>
+    <form class="detail form" id="mdp-form" style="margin-top:16px"><div class="section-title" style="margin:0">Mot de passe</div>
+      <label class="field" for="mdp-old"><span>Mot de passe actuel</span><input id="mdp-old" type="password" autocomplete="current-password" required></label>
+      <label class="field" for="mdp-new"><span>Nouveau mot de passe (8 caractères minimum)</span><input id="mdp-new" type="password" autocomplete="new-password" required></label>
+      <label class="field" for="mdp-new2"><span>Confirmer le nouveau mot de passe</span><input id="mdp-new2" type="password" autocomplete="new-password" required></label>
+      <button class="btn" type="submit">Changer le mot de passe</button></form>
+    <p class="msg" id="staff-msg" style="margin-top:14px"></p>
+    <button class="btn danger" type="button" id="logout" style="margin-top:16px;width:100%;justify-content:center">Se déconnecter</button>`;
+  $("#prof-form").onsubmit = (e) => { e.preventDefault(); avecMessage(e.submitter, async () => {
+    session.compte = await api("PUT", "moi", { nom: $("#prof-nom").value.trim(), telephone: $("#prof-tel").value.trim() }); sauverSession();
+    appReglages("compte"); message("Profil enregistré.", true);
+  }); };
+  $("#mdp-form").onsubmit = (e) => { e.preventDefault(); avecMessage(e.submitter, async () => {
+    if ($("#mdp-new").value !== $("#mdp-new2").value) throw new Error("Les deux nouveaux mots de passe ne sont pas identiques.");
+    session.compte = await api("PUT", "moi", { ancienMdp: $("#mdp-old").value, mdp: $("#mdp-new").value }); sauverSession();
+    e.target.reset(); message("Mot de passe changé.", true);
+  }); };
+  $("#logout").onclick = async () => { try { await api("POST", "deconnexion"); } catch {} session = null; sauverSession(); appReglages(null); };
+}
+
+async function reglageArgent(zone) {
+  await rafraichirCompte();
+  const c = session?.compte; if (!c) return reglageCompte(zone);
+  zone.innerHTML = `<div class="money-card"><small>Solde de ton compte Neoran</small><strong>${euros(c.solde)}</strong><span>Salaires et virements reçus de tes entreprises sur l'intranet.</span></div>
+    <div class="section-title">Derniers mouvements</div>
+    ${c.historique?.length ? `<div class="list">${c.historique.map((h) => `<div class="row"><span class="grow"><strong>${esc(h.libelle)}</strong><small>${dateHeure(h.date)}</small></span><span class="end" style="color:#5be29b;font-weight:700">+${euros(h.montant)}</span></div>`).join("")}</div>` : `<p class="empty">Aucun mouvement pour le moment.</p>`}`;
+}
+
+function reglageFond(zone) {
+  const actuel = store.get("fond", "violet");
+  zone.innerHTML = `<div class="section-title" style="margin-top:0">Fond d'écran</div><div class="list"><div class="walls">${Object.entries(FONDS).map(([k, f]) => `<button type="button" data-fond="${k}" class="${k === actuel ? "on" : ""}"><span class="sw" style="background:linear-gradient(135deg,${f.w1},${f.w2} 55%,${f.w3})"></span>${esc(f.nom)}</button>`).join("")}</div></div>`;
+  zone.querySelectorAll("[data-fond]").forEach((b) => (b.onclick = () => { store.set("fond", b.dataset.fond); appliquerFond(b.dataset.fond); reglageFond(zone); }));
+}
+
+function reglageApropos(zone) {
+  zone.innerHTML = `<div class="section-title" style="margin-top:0">À propos</div><div class="list">
+      <div class="row"><span class="grow"><strong>Serveur</strong></span><span class="end">${esc(INTRANET.serveur)}</span></div>
+      <div class="row"><span class="grow"><strong>Ville</strong></span><span class="end">${esc(INTRANET.ville)}</span></div>
+      <div class="row"><span class="grow"><strong>Compte</strong></span><span class="end">${session ? esc(session.compte.identifiant) : "Non connecté"}</span></div>
+    </div>`;
+}
+
+/* =====================================================================
+   ESPACE STAFF (comptes staff et admin)
    ===================================================================== */
 const SCHEMA = {
   general: { nom: "Général", objet: true, champs: [["serveur", "Nom du serveur"], ["ville", "Ville"], ["discord", "Lien Discord (https://…)"]] },
@@ -713,26 +921,6 @@ const SCHEMA = {
   reglement: { nom: "Règlement", titre: (e) => e.titre, champs: [["titre", "Titre de la partie"], ["regles", "Règles (une par ligne)", "lignes"]] },
   liens: { nom: "Liens", titre: (e) => e.nom, champs: [["nom", "Nom"], ["url", "Adresse (https://…)"], ["description", "Description"]] },
 };
-
-let session = (() => { try { return JSON.parse(sessionStorage.getItem("intranet.session")); } catch { return null; } })();
-const sauverSession = () => { try { session ? sessionStorage.setItem("intranet.session", JSON.stringify(session)) : sessionStorage.removeItem("intranet.session"); } catch {} };
-
-async function api(methode, chemin, donnees) {
-  let r;
-  try {
-    r = await fetch("api/" + chemin, {
-      method: methode,
-      headers: { "Content-Type": "application/json", ...(session ? { Authorization: "Bearer " + session.jeton } : {}) },
-      body: donnees === undefined ? undefined : JSON.stringify(donnees),
-    });
-  } catch {
-    throw new Error("Serveur de l'intranet injoignable. L'espace staff ne marche que si le site est en ligne.");
-  }
-  const j = await r.json().catch(() => ({}));
-  if (r.status === 401 && chemin !== "connexion") { session = null; sauverSession(); }
-  if (!r.ok) throw new Error(j.erreur || "Le serveur a refusé la demande.");
-  return j;
-}
 
 const champHtml = ([k, label, type, options], valeur) => {
   const id = `f-${k}`;
@@ -746,44 +934,26 @@ const lireChamps = (champs) => Object.fromEntries(champs.map(([k, , type]) => {
   const v = document.getElementById(`f-${k}`).value;
   return [k, type === "lignes" ? v.split("\n").map((l) => l.trim()).filter(Boolean) : v.trim()];
 }));
-const message = (texte, ok) => { const m = $("#staff-msg"); if (m) { m.textContent = texte; m.className = "msg " + (ok ? "ok" : "ko"); } };
 const sansExemple = (liste) => (liste || []).map(({ exemple, ...reste }) => reste);
-async function avecMessage(bouton, action) {
-  const connecte = !!session;
-  if (bouton) bouton.disabled = true;
-  // Si la session a expiré pendant l'action, on renvoie vers l'écran de connexion
-  try { await action(); } catch (e) { message(e.message, false); if (connecte && !session) setTimeout(appStaff, 1200); } finally { if (bouton) bouton.disabled = false; }
-}
-
 function appStaff() {
-  if (session) return staffAccueil();
-  setView(`<form class="detail form" id="login" style="max-width:420px;margin:30px auto 0">
-      <h2>Espace staff</h2><p class="meta" style="margin:0">Connecte-toi pour gérer le contenu de la tablette.</p>
-      <label class="field" for="login-id"><span>Identifiant</span><input id="login-id" autocomplete="username" required></label>
-      <label class="field" for="login-mdp"><span>Mot de passe</span><input id="login-mdp" type="password" autocomplete="current-password" required></label>
-      <p class="msg" id="staff-msg"></p>
-      <button class="btn" type="submit">Se connecter</button>
-    </form>`);
-  $("#login").onsubmit = (e) => {
-    e.preventDefault();
-    avecMessage(e.submitter || $("#login button"), async () => {
-      session = await api("POST", "connexion", { identifiant: $("#login-id").value.trim(), mdp: $("#login-mdp").value });
-      sauverSession(); staffAccueil();
-    });
-  };
+  if (!session) return vueConnexion(appStaff, { avant: `<p class="meta" style="text-align:center;margin:0 0 18px">Espace réservé au staff du serveur.</p>` });
+  if (!estStaffCompte(session.compte)) return setView(`<div class="detail" style="text-align:center;max-width:460px;margin:30px auto 0"><h2>Réservé au staff</h2><p style="margin:8px auto 0">Ton compte <strong>${esc(session.compte.identifiant)}</strong> est un compte joueur. Si tu fais partie du staff, demande à un administrateur de changer ton rôle.</p></div>`);
+  staffAccueil();
 }
 
 function staffAccueil() {
   const c = session.compte;
-  setView(`<div class="detail" style="display:flex;align-items:center;gap:14px;flex-wrap:wrap"><span class="avatar" style="background:${couleur(c.nom)}">${esc(initiales(c.nom))}</span><div class="grow" style="flex:1;min-width:0"><strong>${esc(c.nom)}</strong><div class="meta">${esc(c.identifiant)} · ${c.role === "admin" ? "Administrateur" : "Staff"}</div></div><button class="btn ghost" type="button" id="logout">Se déconnecter</button></div>
+  setView(`<div class="detail" style="display:flex;align-items:center;gap:14px;flex-wrap:wrap"><span class="avatar" style="background:${couleur(c.nom)}">${esc(initiales(c.nom))}</span><div class="grow" style="flex:1;min-width:0"><strong>${esc(c.nom)}</strong><div class="meta">${esc(c.identifiant)} · ${ROLES_NOM[c.role]}</div></div><button class="btn ghost" type="button" id="logout">Se déconnecter</button></div>
     <div class="section-title" style="margin-top:24px">Contenu de la tablette</div>
     <div class="list">${Object.entries(SCHEMA).map(([k, s]) => `<button class="row" type="button" data-sec="${k}"><span class="grow"><strong>${esc(s.nom)}</strong></span><span class="end">${s.objet ? "" : `${(INTRANET[k] || []).length} élément(s)`} ›</span></button>`).join("")}</div>
     <div class="section-title">Comptes</div>
-    <div class="list"><button class="row" type="button" id="go-comptes"><span class="grow"><strong>Comptes staff</strong><small>${c.role === "admin" ? "Créer, modifier et supprimer des comptes" : "Voir les comptes"}</small></span><span class="end">›</span></button>
-    <button class="row" type="button" id="go-mdp"><span class="grow"><strong>Mon profil et mot de passe</strong></span><span class="end">›</span></button></div>`);
+    <div class="list"><button class="row" type="button" id="go-comptes"><span class="grow"><strong>Comptes</strong><small>${c.role === "admin" ? "Joueurs, staff et admins : rôles, mots de passe, suppression" : "Voir les comptes"}</small></span><span class="end">›</span></button>
+    <button class="row" type="button" id="go-ent"><span class="grow"><strong>Entreprises</strong><small>Toutes les entreprises, leurs employés, leur trésorerie et leur tchat</small></span><span class="end">›</span></button>
+    <button class="row" type="button" id="go-mdp"><span class="grow"><strong>Mon profil et mot de passe</strong><small>Dans Réglages</small></span><span class="end">›</span></button></div>`);
   $("#app-body").querySelectorAll("[data-sec]").forEach((b) => (b.onclick = () => staffSection(b.dataset.sec)));
   $("#go-comptes").onclick = staffComptes;
-  $("#go-mdp").onclick = staffMonProfil;
+  $("#go-mdp").onclick = () => { current = "reglages"; $("#app-title").textContent = "Réglages"; appReglages("compte"); };
+  $("#go-ent").onclick = () => { current = "gestion"; $("#app-title").textContent = "Gestion entreprise"; appGestion(); };
   $("#logout").onclick = async () => { try { await api("POST", "deconnexion"); } catch {} session = null; sauverSession(); appStaff(); };
 }
 
@@ -832,9 +1002,9 @@ async function staffComptes() {
   let comptes;
   try { comptes = await api("GET", "staff"); } catch (e) { setView(`<p class="msg ko" id="staff-msg">${esc(e.message)}</p>`, { back: staffAccueil }); return; }
   const admin = session.compte.role === "admin";
-  setView(`<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap"><h2 style="margin:0;font-size:22px">Comptes staff</h2>${admin ? '<button class="btn" type="button" id="new-acc">Nouveau compte</button>' : ""}</div>
+  setView(`<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap"><h2 style="margin:0;font-size:22px">Comptes</h2>${admin ? '<button class="btn" type="button" id="new-acc">Nouveau compte</button>' : ""}</div>
     <p class="msg" id="staff-msg"></p>
-    <div class="list">${comptes.map((c) => `<div class="row"><span class="avatar" style="background:${couleur(c.nom)}">${esc(initiales(c.nom))}</span><span class="grow"><strong>${esc(c.nom)}</strong><small>${esc(c.identifiant)}</small></span><span class="pill ${c.role === "admin" ? "orange" : "grey"}">${c.role === "admin" ? "Admin" : "Staff"}</span>${admin && c.id !== session.compte.id ? `<button class="btn ghost" type="button" data-edit="${c.id}">Modifier</button><button class="btn danger" type="button" data-del="${c.id}">Supprimer</button>` : ""}</div>`).join("")}</div>`, { back: staffAccueil });
+    <div class="list">${comptes.map((c) => `<div class="row"><span class="avatar" style="background:${couleur(c.nom)}">${esc(initiales(c.nom))}</span><span class="grow"><strong>${esc(c.nom)}</strong><small>${esc(c.identifiant)}</small></span><span class="pill ${c.role === "admin" ? "orange" : c.role === "staff" ? "red" : "grey"}">${ROLES_NOM[c.role]}</span>${admin && c.id !== session.compte.id ? `<button class="btn ghost" type="button" data-edit="${c.id}">Modifier</button><button class="btn danger" type="button" data-del="${c.id}">Supprimer</button>` : ""}</div>`).join("")}</div>`, { back: staffAccueil });
   if (!admin) return;
   $("#new-acc").onclick = () => staffCompteForm(null);
   $("#app-body").querySelectorAll("[data-edit]").forEach((b) => (b.onclick = () => staffCompteForm(comptes.find((c) => c.id === b.dataset.edit))));
@@ -846,10 +1016,10 @@ async function staffComptes() {
 
 function staffCompteForm(c) {
   const nouveau = !c;
-  setView(`<form class="detail form" id="acc-form"><h2>${nouveau ? "Nouveau compte staff" : "Modifier " + esc(c.identifiant)}</h2>
+  setView(`<form class="detail form" id="acc-form"><h2>${nouveau ? "Nouveau compte" : "Modifier " + esc(c.identifiant)}</h2>
     ${nouveau ? `<label class="field" for="acc-id"><span>Identifiant de connexion</span><input id="acc-id" required autocomplete="off"></label>` : ""}
-    <label class="field" for="acc-nom"><span>Nom affiché</span><input id="acc-nom" value="${esc(c?.nom)}"></label>
-    <label class="field" for="acc-role"><span>Rôle</span><select id="acc-role"><option value="staff"${c?.role !== "admin" ? " selected" : ""}>Staff : modifie le contenu</option><option value="admin"${c?.role === "admin" ? " selected" : ""}>Admin : modifie le contenu et gère les comptes</option></select></label>
+    <label class="field" for="acc-nom"><span>Nom du personnage</span><input id="acc-nom" value="${esc(c?.nom)}"></label>
+    <label class="field" for="acc-role"><span>Rôle</span><select id="acc-role">${[["joueur", "Joueur : compte normal"], ["staff", "Staff : modifie le contenu et gère toutes les entreprises"], ["admin", "Admin : comme le staff, et gère les comptes"]].map(([v, t]) => `<option value="${v}"${(c?.role || "staff") === v ? " selected" : ""}>${t}</option>`).join("")}</select></label>
     <label class="field" for="acc-mdp"><span>${nouveau ? "Mot de passe (8 caractères minimum)" : "Nouveau mot de passe (laisser vide pour ne pas changer)"}</span><input id="acc-mdp" type="password" autocomplete="new-password"${nouveau ? " required" : ""}></label>
     <p class="msg" id="staff-msg"></p><button class="btn" type="submit">${nouveau ? "Créer le compte" : "Enregistrer"}</button></form>`, { back: staffComptes });
   $("#acc-form").onsubmit = (e) => {
@@ -864,23 +1034,212 @@ function staffCompteForm(c) {
   };
 }
 
-function staffMonProfil() {
-  const c = session.compte;
-  setView(`<form class="detail form" id="me-form"><h2>Mon profil</h2>
-    <label class="field" for="me-nom"><span>Nom affiché</span><input id="me-nom" value="${esc(c.nom)}"></label>
-    <label class="field" for="me-mdp"><span>Nouveau mot de passe (laisser vide pour ne pas changer)</span><input id="me-mdp" type="password" autocomplete="new-password"></label>
-    <label class="field" for="me-mdp2"><span>Confirmer le nouveau mot de passe</span><input id="me-mdp2" type="password" autocomplete="new-password"></label>
-    <p class="msg" id="staff-msg"></p><button class="btn" type="submit">Enregistrer</button></form>`, { back: staffAccueil });
-  $("#me-form").onsubmit = (e) => {
-    e.preventDefault();
-    avecMessage(e.submitter, async () => {
-      const mdp = $("#me-mdp").value;
-      if (mdp !== $("#me-mdp2").value) throw new Error("Les deux mots de passe ne sont pas identiques.");
-      const donnees = { nom: $("#me-nom").value.trim() }; if (mdp) donnees.mdp = mdp;
-      session.compte = await api("PUT", "staff/" + c.id, donnees); sauverSession();
-      $("#me-mdp").value = $("#me-mdp2").value = "";
-      message("Profil enregistré.", true);
-    });
+/* =====================================================================
+   GESTION ENTREPRISE
+   L'argent affiché ici est celui de l'intranet : il n'est pas relié à la banque du jeu.
+   ===================================================================== */
+const GRADES_NOM = { patron: "Patron", gerant: "Gérant", employe: "Employé", staff: "Staff" };
+const gradePill = (g) => `<span class="pill ${g === "patron" ? "orange" : g === "gerant" ? "green" : g === "staff" ? "red" : "grey"}">${GRADES_NOM[g] || "—"}</span>`;
+let tchatMinuteur = null;
+let ongletEntreprise = "apercu";
+
+async function appGestion() {
+  if (!session) return vueConnexion(appGestion, { avant: `<p class="meta" style="text-align:center;margin:0 0 18px">La gestion d'entreprise demande un compte Neoran.</p>` });
+  setView(`<p class="empty">Chargement de tes entreprises…</p>`);
+  let liste;
+  try { liste = await api("GET", "entreprises"); } catch (e) { if (!session) return appGestion(); return setView(`<p class="msg ko" id="staff-msg">${esc(e.message)}</p>`); }
+  const staff = estStaffCompte(session.compte);
+  setView(`<div class="head-row"><h2>${staff ? "Toutes les entreprises" : "Mes entreprises"}</h2>${staff ? '<button class="btn" type="button" id="ent-new">Créer une entreprise</button>' : ""}</div>
+    <p class="msg" id="staff-msg"></p>
+    ${liste.length ? `<div class="list">${liste.map((e) => `<button class="row" type="button" data-ent="${e.id}"><span class="avatar" style="background:${couleur(e.nom)};border-radius:12px">${esc(initiales(e.nom))}</span><span class="grow"><strong>${esc(e.nom)}</strong><small>${esc(e.secteur || "Secteur non précisé")} · ${e.effectif} membre(s)</small></span>${gradePill(e.monGrade)}<span class="end">›</span></button>`).join("")}</div>`
+      : `<div class="detail" style="text-align:center"><h2>Aucune entreprise</h2><p style="margin:8px auto 0">Tu ne fais partie d'aucune entreprise pour le moment. Donne ton identifiant <strong>${esc(session.compte.identifiant)}</strong> à ton patron pour qu'il t'ajoute. Pour créer une entreprise, contacte le staff.</p></div>`}`);
+  $("#app-body").querySelectorAll("[data-ent]").forEach((b) => (b.onclick = () => { ongletEntreprise = "apercu"; vueEntreprise(b.dataset.ent); }));
+  if (staff) $("#ent-new").onclick = formNouvelleEntreprise;
+}
+
+function formNouvelleEntreprise() {
+  setView(`<form class="detail form" id="ent-form"><h2>Nouvelle entreprise</h2>
+    <label class="field" for="ne-nom"><span>Nom de l'entreprise</span><input id="ne-nom" required></label>
+    <label class="field" for="ne-sec"><span>Secteur d'activité</span><input id="ne-sec" placeholder="Garage, restaurant, transport…"></label>
+    <label class="field" for="ne-pat"><span>Identifiant du compte du patron (facultatif)</span><input id="ne-pat" autocomplete="off"></label>
+    <p class="msg" id="staff-msg"></p><button class="btn" type="submit">Créer l'entreprise</button></form>`, { back: appGestion });
+  $("#ent-form").onsubmit = (e) => { e.preventDefault(); avecMessage(e.submitter, async () => {
+    const ent = await api("POST", "entreprises", { nom: $("#ne-nom").value.trim(), secteur: $("#ne-sec").value.trim(), patron: $("#ne-pat").value.trim() });
+    vueEntreprise(ent.id, ent);
+  }); };
+}
+
+async function vueEntreprise(id, deja) {
+  let e = deja;
+  if (!e) {
+    setView(`<p class="empty">Chargement…</p>`, { back: appGestion });
+    try { e = await api("GET", "entreprises/" + id); } catch (err) { return setView(`<p class="msg ko" id="staff-msg">${esc(err.message)}</p>`, { back: appGestion }); }
+  }
+  const moi = session.compte.id;
+  const monGrade = e.monGrade || "staff";
+  const onglets = [["apercu", "Aperçu"], ["employes", "Employés"], ["virements", e.peutGerer ? "Virements" : "Mes paiements"], ["regles", "Règles"], ["tchat", "Tchat"], ...(monGrade === "patron" || e.estStaff ? [["parametres", "Paramètres"]] : [])];
+  if (!onglets.some(([k]) => k === ongletEntreprise)) ongletEntreprise = "apercu";
+  setView(`<div class="ent-head"><span class="avatar big" style="background:${couleur(e.nom)};border-radius:16px">${esc(initiales(e.nom))}</span><div class="grow"><h2>${esc(e.nom)}</h2><div class="meta">${esc(e.secteur || "Secteur non précisé")} · ${gradePill(monGrade)}</div></div>${e.solde != null ? `<div class="ent-solde"><small>Trésorerie</small><strong>${euros(e.solde)}</strong></div>` : ""}</div>
+    <div class="segmented" role="tablist">${onglets.map(([k, n]) => `<button type="button" role="tab" aria-selected="${k === ongletEntreprise}" data-tab="${k}">${n}</button>`).join("")}</div>
+    <p class="msg" id="staff-msg"></p>
+    <div id="ent-zone"></div>`, { back: appGestion });
+  $("#app-body").querySelectorAll("[data-tab]").forEach((b) => (b.onclick = () => { ongletEntreprise = b.dataset.tab; vueEntreprise(id, e); }));
+  const zone = $("#ent-zone");
+  const recharger = (nouveau, texte) => { vueEntreprise(id, nouveau); if (texte) message(texte, true); };
+  const masse = e.membres.reduce((s, m) => s + (m.salaire || 0), 0);
+
+  if (ongletEntreprise === "apercu") {
+    const moiMembre = e.membres.find((m) => m.compteId === moi);
+    zone.innerHTML = `<div class="stats">
+        ${e.solde != null ? `<div class="stat"><small>Trésorerie</small><strong>${euros(e.solde)}</strong></div>` : ""}
+        <div class="stat"><small>Membres</small><strong>${e.membres.length}</strong></div>
+        ${e.peutGerer ? `<div class="stat"><small>Masse salariale</small><strong>${euros(masse)}</strong></div>` : ""}
+        ${moiMembre ? `<div class="stat"><small>Mon salaire</small><strong>${euros(moiMembre.salaire)}</strong></div>` : ""}
+      </div>
+      <div class="section-title">${e.peutGerer ? "Derniers mouvements" : "Mes derniers paiements"}</div>${transactionsHtml(e.transactions.slice(0, 6))}`;
+  }
+
+  if (ongletEntreprise === "employes") {
+    const peutModifier = (m) => monGrade === "patron" || (monGrade === "gerant" && m.grade === "employe");
+    const ordre = { patron: 0, gerant: 1, employe: 2 };
+    const membres = [...e.membres].sort((a, b) => ordre[a.grade] - ordre[b.grade] || a.nom.localeCompare(b.nom));
+    zone.innerHTML = `${e.peutGerer ? `<form class="detail form inline-form" id="add-form"><div class="section-title" style="margin:0">Ajouter un employé</div>
+        <div class="form-row"><label class="field" for="add-id"><span>Identifiant de son compte</span><input id="add-id" required autocomplete="off"></label>
+        <label class="field" for="add-poste"><span>Poste</span><input id="add-poste" placeholder="Mécanicien, serveur…"></label>
+        <label class="field" for="add-sal"><span>Salaire (€)</span><input id="add-sal" type="number" min="0" step="1" value="0"></label>
+        ${monGrade === "patron" ? `<label class="field" for="add-grade"><span>Grade</span><select id="add-grade"><option value="employe">Employé</option><option value="gerant">Gérant</option></select></label>` : ""}</div>
+        <button class="btn" type="submit">Ajouter</button></form>` : ""}
+      <div class="list" style="margin-top:16px">${membres.map((m) => `<div class="row wrap"><span class="avatar" style="background:${couleur(m.nom)}">${esc(initiales(m.nom))}</span><span class="grow"><strong>${esc(m.nom)}${m.compteId === moi ? " (moi)" : ""}</strong><small>${esc(m.poste)} · ${esc(m.identifiant)}${m.telephone ? " · " + esc(m.telephone) : ""}</small></span>${gradePill(m.grade)}${e.peutGerer ? `<span class="end">${euros(m.salaire)}</span>` : ""}${peutModifier(m) && m.compteId !== moi ? `<button class="btn ghost" type="button" data-edit="${m.compteId}">Modifier</button>` : ""}${m.compteId === moi && m.grade !== "patron" ? `<button class="btn danger" type="button" data-quit="${m.compteId}">Quitter</button>` : ""}</div>`).join("")}</div>`;
+    if (e.peutGerer) $("#add-form").onsubmit = (ev) => { ev.preventDefault(); avecMessage(ev.submitter, async () => {
+      recharger(await api("POST", `entreprises/${id}/membres`, { identifiant: $("#add-id").value.trim(), poste: $("#add-poste").value.trim(), salaire: $("#add-sal").value, grade: $("#add-grade")?.value || "employe" }), "Employé ajouté.");
+    }); };
+    zone.querySelectorAll("[data-edit]").forEach((b) => (b.onclick = () => formMembre(id, e, e.membres.find((m) => m.compteId === b.dataset.edit), monGrade)));
+    zone.querySelectorAll("[data-quit]").forEach((b) => (b.onclick = () => {
+      if (b.dataset.confirm !== "1") { b.dataset.confirm = "1"; b.textContent = "Confirmer"; return; }
+      avecMessage(b, async () => { await api("DELETE", `entreprises/${id}/membres/${b.dataset.quit}`); appGestion(); });
+    }));
+  }
+
+  if (ongletEntreprise === "virements") {
+    const aPayer = e.membres.filter((m) => m.salaire > 0);
+    zone.innerHTML = e.peutGerer ? `<div class="two-col">
+        <form class="detail form" id="vir-form"><div class="section-title" style="margin:0">Faire un virement</div>
+          <label class="field" for="vir-vers"><span>Bénéficiaire</span><select id="vir-vers">${e.membres.map((m) => `<option value="${m.compteId}">${esc(m.nom)} (${esc(m.poste)})</option>`).join("")}</select></label>
+          <label class="field" for="vir-mt"><span>Montant (€)</span><input id="vir-mt" type="number" min="1" step="1" required></label>
+          <label class="field" for="vir-motif"><span>Motif</span><input id="vir-motif" placeholder="Prime, remboursement…"></label>
+          <button class="btn" type="submit">Envoyer le virement</button></form>
+        <div class="detail form"><div class="section-title" style="margin:0">Salaires</div>
+          <p style="margin:0">${aPayer.length} employé(s) avec un salaire, pour un total de <strong>${euros(masse)}</strong>.</p>
+          <button class="btn" type="button" id="pay-all"${aPayer.length ? "" : " disabled"}>Payer tous les salaires</button>
+          ${e.estStaff ? `<div class="section-title" style="margin:10px 0 0">Trésorerie (staff)</div>
+          <label class="field" for="tr-mt"><span>Montant (€)</span><input id="tr-mt" type="number" min="1" step="1"></label>
+          <label class="field" for="tr-motif"><span>Motif</span><input id="tr-motif" placeholder="Capital de départ, amende…"></label>
+          <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" type="button" data-tr="depot">Créditer</button><button class="btn danger" type="button" data-tr="retrait">Débiter</button></div>` : ""}
+        </div></div>
+      <div class="section-title">Historique</div>${transactionsHtml(e.transactions)}`
+      : `<div class="section-title" style="margin-top:0">Mes paiements reçus</div>${transactionsHtml(e.transactions)}`;
+    if (!e.peutGerer) return;
+    $("#vir-form").onsubmit = (ev) => { ev.preventDefault(); avecMessage(ev.submitter, async () => {
+      recharger(await api("POST", `entreprises/${id}/virements`, { vers: $("#vir-vers").value, montant: Number($("#vir-mt").value), motif: $("#vir-motif").value.trim() }), "Virement envoyé.");
+    }); };
+    const pay = $("#pay-all");
+    pay.onclick = () => {
+      if (pay.dataset.confirm !== "1") { pay.dataset.confirm = "1"; pay.textContent = `Confirmer le paiement de ${euros(masse)}`; return; }
+      avecMessage(pay, async () => recharger(await api("POST", `entreprises/${id}/salaires`, {}), "Salaires payés."));
+    };
+    zone.querySelectorAll("[data-tr]").forEach((b) => (b.onclick = () => avecMessage(b, async () => {
+      recharger(await api("POST", `entreprises/${id}/tresorerie`, { type: b.dataset.tr, montant: Number($("#tr-mt").value), motif: $("#tr-motif").value.trim() }), b.dataset.tr === "depot" ? "Trésorerie créditée." : "Trésorerie débitée.");
+    })));
+  }
+
+  if (ongletEntreprise === "regles") {
+    zone.innerHTML = e.peutGerer
+      ? `<form class="detail form" id="reg-form"><label class="field" for="reg-txt"><span>Règles internes (une par ligne)</span><textarea id="reg-txt" rows="10">${esc(e.regles.join("\n"))}</textarea></label><button class="btn" type="submit">Enregistrer les règles</button></form>`
+      : e.regles.length ? `<div class="detail"><ol class="rules">${e.regles.map((r) => `<li>${esc(r)}</li>`).join("")}</ol></div>` : `<p class="empty">Aucune règle interne pour le moment.</p>`;
+    if (e.peutGerer) $("#reg-form").onsubmit = (ev) => { ev.preventDefault(); avecMessage(ev.submitter, async () => {
+      recharger(await api("PUT", `entreprises/${id}/regles`, { regles: $("#reg-txt").value.split("\n").map((l) => l.trim()).filter(Boolean) }), "Règles enregistrées.");
+    }); };
+  }
+
+  if (ongletEntreprise === "tchat") vueTchat(id, zone);
+
+  if (ongletEntreprise === "parametres") {
+    zone.innerHTML = `<form class="detail form" id="par-form"><label class="field" for="par-nom"><span>Nom de l'entreprise</span><input id="par-nom" value="${esc(e.nom)}"></label>
+        <label class="field" for="par-sec"><span>Secteur d'activité</span><input id="par-sec" value="${esc(e.secteur)}"></label>
+        <button class="btn" type="submit">Enregistrer</button></form>
+      ${e.estStaff ? `<div class="detail form" style="margin-top:16px"><div class="section-title" style="margin:0">Zone staff</div><p style="margin:0">Supprime l'entreprise, ses employés, son historique et son tchat. C'est définitif.</p><button class="btn danger" type="button" id="ent-del">Supprimer l'entreprise</button></div>` : ""}`;
+    $("#par-form").onsubmit = (ev) => { ev.preventDefault(); avecMessage(ev.submitter, async () => {
+      recharger(await api("PUT", "entreprises/" + id, { nom: $("#par-nom").value.trim(), secteur: $("#par-sec").value.trim() }), "Entreprise mise à jour.");
+    }); };
+    const del = $("#ent-del");
+    if (del) del.onclick = () => {
+      if (del.dataset.confirm !== "1") { del.dataset.confirm = "1"; del.textContent = "Confirmer la suppression définitive"; return; }
+      avecMessage(del, async () => { await api("DELETE", "entreprises/" + id); appGestion(); });
+    };
+  }
+}
+
+function transactionsHtml(liste) {
+  if (!liste.length) return `<p class="empty">Aucun mouvement pour le moment.</p>`;
+  const lib = { virement: "Virement", salaire: "Salaire", depot: "Crédit staff", retrait: "Débit staff" };
+  return `<div class="list">${liste.map((t) => {
+    const entree = t.type === "depot";
+    return `<div class="row"><span class="grow"><strong>${lib[t.type] || t.type}${t.versNom ? " → " + esc(t.versNom) : ""}</strong><small>${esc(t.motif)} · par ${esc(t.parNom)} · ${dateHeure(t.date)}</small></span><span class="end" style="font-weight:700;color:${entree ? "#5be29b" : "#ff8a8d"}">${entree ? "+" : "−"}${euros(t.montant)}</span></div>`;
+  }).join("")}</div>`;
+}
+
+function formMembre(id, e, m, monGrade) {
+  setView(`<form class="detail form" id="mb-form"><h2>${esc(m.nom)}</h2><p class="meta" style="margin:0">${esc(m.identifiant)}</p>
+    <label class="field" for="mb-poste"><span>Poste</span><input id="mb-poste" value="${esc(m.poste)}"></label>
+    <label class="field" for="mb-sal"><span>Salaire (€)</span><input id="mb-sal" type="number" min="0" step="1" value="${m.salaire}"></label>
+    ${monGrade === "patron" ? `<label class="field" for="mb-grade"><span>Grade</span><select id="mb-grade">${["employe", "gerant", "patron"].map((g) => `<option value="${g}"${g === m.grade ? " selected" : ""}>${GRADES_NOM[g]}${g === "patron" ? " (l'actuel patron devient gérant)" : ""}</option>`).join("")}</select></label>` : ""}
+    <p class="msg" id="staff-msg"></p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" type="submit">Enregistrer</button><button class="btn danger" type="button" id="mb-del">Retirer de l'entreprise</button></div></form>`,
+    { back: () => vueEntreprise(id, e) });
+  $("#mb-form").onsubmit = (ev) => { ev.preventDefault(); avecMessage(ev.submitter, async () => {
+    const donnees = { poste: $("#mb-poste").value.trim(), salaire: $("#mb-sal").value };
+    if ($("#mb-grade")) donnees.grade = $("#mb-grade").value;
+    const n = await api("PUT", `entreprises/${id}/membres/${m.compteId}`, donnees);
+    ongletEntreprise = "employes"; vueEntreprise(id, n); message("Employé mis à jour.", true);
+  }); };
+  const del = $("#mb-del");
+  del.onclick = () => {
+    if (del.dataset.confirm !== "1") { del.dataset.confirm = "1"; del.textContent = "Confirmer le retrait"; return; }
+    avecMessage(del, async () => { const n = await api("DELETE", `entreprises/${id}/membres/${m.compteId}`); ongletEntreprise = "employes"; vueEntreprise(id, n); message("Employé retiré.", true); });
+  };
+}
+
+// Tchat de l'entreprise : nouveaux messages récupérés toutes les 4 secondes
+function vueTchat(id, zone) {
+  zone.innerHTML = `<div class="chat"><div class="chat-list" id="chat-list"><p class="empty">Chargement des messages…</p></div>
+    <form class="chat-input" id="chat-form"><input id="chat-txt" maxlength="500" placeholder="Écrire un message…" autocomplete="off"><button class="btn" type="submit">Envoyer</button></form></div>`;
+  let dernier = 0, premier = true;
+  const liste = $("#chat-list");
+  const ajouter = (msgs) => {
+    if (premier) { liste.innerHTML = msgs.length ? "" : `<p class="empty" id="chat-vide">Aucun message. Lance la discussion !</p>`; premier = false; }
+    if (!msgs.length) return;
+    $("#chat-vide")?.remove();
+    const enBas = liste.scrollHeight - liste.scrollTop - liste.clientHeight < 60;
+    for (const m of msgs) {
+      if (m.t <= dernier) continue;
+      dernier = m.t;
+      const mien = m.auteurId === session.compte.id;
+      const d = new Date(m.t);
+      liste.insertAdjacentHTML("beforeend", `<div class="bubble${mien ? " me" : ""}">${mien ? "" : `<b>${esc(m.nom)}${m.staff ? ' <span class="pill red">Staff</span>' : ""}</b>`}<span>${esc(m.texte)}</span><time>${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}</time></div>`);
+    }
+    if (enBas || msgs.some((m) => m.auteurId === session.compte.id)) liste.scrollTop = liste.scrollHeight;
+  };
+  const charger = async () => {
+    if (!document.body.contains(liste)) return clearInterval(tchatMinuteur);
+    try { ajouter(await api("GET", `entreprises/${id}/tchat?depuis=${dernier}`)); } catch (e) { message(e.message, false); }
+  };
+  charger();
+  tchatMinuteur = setInterval(charger, 4000);
+  $("#chat-form").onsubmit = (ev) => {
+    ev.preventDefault();
+    const champ = $("#chat-txt"), texte = champ.value.trim();
+    if (!texte) return;
+    avecMessage(ev.submitter, async () => { await api("POST", `entreprises/${id}/tchat`, { texte }); champ.value = ""; await charger(); champ.focus(); });
   };
 }
 
@@ -929,6 +1288,7 @@ document.addEventListener("keydown", (e) => {
 appliquerFond(store.get("fond", "violet"));
 renderHome();
 chargerContenu();
+rafraichirCompte();
 setInterval(tick, 10000);
 </script>
 </body>
