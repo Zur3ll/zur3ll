@@ -7,6 +7,7 @@ using Life;
 using Life.CharacterSystem;
 using Life.Network;
 using Mirror;
+using Mirror.RemoteCalls;
 using UnityEngine;
 
 namespace SupportTicket
