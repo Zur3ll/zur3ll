@@ -16,6 +16,7 @@ const ROLES = ['admin', 'staff', 'joueur'];
 const GRADES = ['patron', 'gerant', 'employe'];
 const MAX_TRANSACTIONS = 500;
 const MAX_MESSAGES = 300;
+const MAX_OPERATIONS = 2000;
 
 // Sections modifiables et champs autorisés pour chaque élément (le reste est ignoré)
 const SECTIONS = [
@@ -174,6 +175,7 @@ function detailCompte(array $c): array
         'historique' => array_slice($c['historique'] ?? [], 0, 50),
         'fond' => $c['fond'] ?? null,
         'notes' => $c['notes'] ?? [],
+        'personnage' => !empty($c['personnageId']) ? ['id' => $c['personnageId'], 'nom' => $c['personnageNom'] ?? ''] : null,
     ];
 }
 
@@ -678,25 +680,64 @@ function detailEntreprise(array $e, array $moi): array
     $staff = chargerStaff();
     $noms = [];
     foreach ($staff as $c) {
-        $noms[$c['id']] = ['nom' => $c['nom'], 'identifiant' => $c['identifiant'], 'telephone' => $c['telephone'] ?? ''];
+        $noms[$c['id']] = ['nom' => $c['nom'], 'identifiant' => $c['identifiant'], 'telephone' => $c['telephone'] ?? '', 'lie' => !empty($c['personnageId'])];
     }
     $grade = gradeDe($e, $moi);
     $gere = in_array($grade, ['patron', 'gerant'], true);
-    $membres = array_map(fn($m) => $m + ($noms[$m['compteId']] ?? ['nom' => 'Compte supprimé', 'identifiant' => '', 'telephone' => '']), $e['membres']);
+    $membres = array_map(fn($m) => $m + ($noms[$m['compteId']] ?? ['nom' => 'Compte supprimé', 'identifiant' => '', 'telephone' => '', 'lie' => false]), $e['membres']);
     // Un employé ne voit que les mouvements qui le concernent
     $transactions = $gere ? $e['transactions'] : array_values(array_filter($e['transactions'], fn($t) => ($t['vers'] ?? null) === $moi['id']));
     foreach ($transactions as &$t) {
         $t['versNom'] = isset($t['vers']) ? ($noms[$t['vers']]['nom'] ?? 'Compte supprimé') : null;
         $t['parNom'] = $noms[$t['par']]['nom'] ?? 'Compte supprimé';
     }
+    $liee = !empty($e['bizId']);
     return resumeEntreprise($e, $moi) + [
-        'solde' => $gere ? (int) $e['solde'] : null,
+        'bizId' => $e['bizId'] ?? null,
+        'liee' => $liee,
+        'nomJeu' => $e['nomJeu'] ?? null,
+        'soldeMaj' => $liee ? ($e['soldeMaj'] ?? null) : null,
+        'enAttente' => $liee && $gere ? montantEnAttente(fn($op) => ($op['bizId'] ?? null) === $e['bizId']) : 0,
+        'synchroActive' => synchroActive(),
+        'entreprisesJeu' => estStaff($moi) ? infoJeu()['entreprises'] : [],
+        'solde' => $gere ? ($liee ? (isset($e['banqueJeu']) ? (int) $e['banqueJeu'] : null) : (int) $e['solde']) : null,
         'regles' => $e['regles'],
         'membres' => $membres,
         'transactions' => $transactions,
         'peutGerer' => $gere,
         'estStaff' => estStaff($moi),
     ];
+}
+
+// Entreprise reliée au jeu : les virements partent dans la file du plugin, payés avec la vraie banque de l'entreprise
+function virementsJeu(array &$e, array $paiements, array $moi): void
+{
+    $staff = chargerStaff();
+    $total = 0;
+    $nonRelies = [];
+    foreach ($paiements as [$membre, $somme]) {
+        $idx = indexParId($staff, $membre['compteId']);
+        if ($idx === null || empty($staff[$idx]['personnageId'])) {
+            $nonRelies[] = $idx === null ? 'Compte supprimé' : $staff[$idx]['nom'];
+        }
+        $total += $somme;
+    }
+    if ($nonRelies) {
+        throw new ApiErreur('Personnage pas encore relié pour : ' . implode(', ', $nonRelies) . '. Chacun doit taper son code en jeu (app Banque).');
+    }
+    if (!isset($e['banqueJeu'])) {
+        throw new ApiErreur("Le solde en jeu n'a pas encore été synchronisé. Vérifie que le plugin tourne sur le serveur de jeu.");
+    }
+    $dispo = (int) $e['banqueJeu'] - montantEnAttente(fn($op) => ($op['bizId'] ?? null) === $e['bizId']);
+    if ($total > $dispo) {
+        throw new ApiErreur("Solde insuffisant en jeu : il faut $total € et l'entreprise a $dispo € disponibles.");
+    }
+    foreach ($paiements as [$membre, $somme, $type, $motif]) {
+        $dest = $staff[indexParId($staff, $membre['compteId'])];
+        $op = creerOperation(['type' => 'entreprise', 'entrepriseId' => $e['id'], 'entrepriseNom' => $e['nom'], 'bizId' => $e['bizId'],
+            'vers' => $dest['id'], 'versPersonnage' => (int) $dest['personnageId'], 'montant' => $somme, 'motif' => $motif, 'par' => $moi['id']]);
+        ajouterTransaction($e, ['type' => $type, 'montant' => $somme, 'vers' => $dest['id'], 'motif' => $motif, 'par' => $moi['id'], 'opId' => $op['id'], 'statut' => 'attente']);
+    }
 }
 
 function routesEntreprises(string $methode, string $route, array $moi): void
@@ -781,6 +822,26 @@ function routesEntreprises(string $methode, string $route, array $moi): void
         }
         if (isset($corps['secteur'])) {
             $e['secteur'] = texte($corps['secteur'], 60);
+        }
+        // Seul le staff relie une entreprise à son ID en jeu : un patron pourrait sinon vider l'entreprise d'un autre
+        if (array_key_exists('bizId', $corps)) {
+            if (!estStaff($moi)) {
+                throw new ApiErreur("Seul le staff peut relier l'entreprise à celle du jeu.", 403);
+            }
+            $biz = $corps['bizId'] === null || $corps['bizId'] === '' ? null : (int) $corps['bizId'];
+            if ($biz !== null && $biz <= 0) {
+                throw new ApiErreur("L'ID de l'entreprise en jeu doit être un nombre positif.");
+            }
+            foreach ($liste as $n => $autre) {
+                if ($n !== $i && $biz !== null && ($autre['bizId'] ?? null) === $biz) {
+                    throw new ApiErreur("L'entreprise en jeu n°$biz est déjà reliée à « {$autre['nom']} ».");
+                }
+            }
+            if ($biz !== ($e['bizId'] ?? null)) {
+                $e['bizId'] = $biz;
+                unset($e['banqueJeu'], $e['soldeMaj'], $e['nomJeu']);
+                journal("{$moi['identifiant']} a relié « {$e['nom']} » à l'entreprise en jeu " . ($biz ?? 'aucune'));
+            }
         }
         $liste[$i] = $e;
         sauverEntreprises($liste);
@@ -905,10 +966,16 @@ function routesEntreprises(string $methode, string $route, array $moi): void
         if (!$membre) {
             throw new ApiErreur('Choisis un employé de l\'entreprise.');
         }
-        if ($somme > $e['solde']) {
+        if (empty($e['bizId']) && $somme > $e['solde']) {
             throw new ApiErreur("Solde insuffisant ({$e['solde']} € disponibles).");
         }
         $motif = trim(texte($corps['motif'] ?? '', 100)) ?: 'Virement';
+        if (!empty($e['bizId'])) {
+            virementsJeu($e, [[$membre, $somme, 'virement', $motif]], $moi);
+            $liste[$i] = $e;
+            sauverEntreprises($liste);
+            repondre(200, detailEntreprise($e, $moi));
+        }
         $e['solde'] -= $somme;
         ajouterTransaction($e, ['type' => 'virement', 'montant' => $somme, 'vers' => $membre['compteId'], 'motif' => $motif, 'par' => $moi['id']]);
         $staff = chargerStaff();
@@ -925,6 +992,12 @@ function routesEntreprises(string $methode, string $route, array $moi): void
         $total = array_sum(array_column($aPayer, 'salaire'));
         if ($total === 0) {
             throw new ApiErreur("Aucun salaire n'est défini. Indique un salaire dans la fiche de chaque employé.");
+        }
+        if (!empty($e['bizId'])) {
+            virementsJeu($e, array_map(fn($mb) => [$mb, $mb['salaire'], 'salaire', 'Salaire'], $aPayer), $moi);
+            $liste[$i] = $e;
+            sauverEntreprises($liste);
+            repondre(200, detailEntreprise($e, $moi));
         }
         if ($total > $e['solde']) {
             throw new ApiErreur("Solde insuffisant : il faut $total € et l'entreprise a {$e['solde']} €.");
@@ -945,6 +1018,9 @@ function routesEntreprises(string $methode, string $route, array $moi): void
         if (!estStaff($moi)) {
             throw new ApiErreur('Seul le staff peut créditer ou débiter une entreprise.', 403);
         }
+        if (!empty($e['bizId'])) {
+            throw new ApiErreur("Cette entreprise est reliée au jeu : son argent se gère en jeu.");
+        }
         $corps = lireCorps();
         $somme = montant($corps['montant'] ?? null);
         $type = $corps['type'] ?? '';
@@ -963,6 +1039,288 @@ function routesEntreprises(string $methode, string $route, array $moi): void
     }
 
     throw new ApiErreur('Route inconnue.', 404);
+}
+
+// ---------- Liaison avec le jeu (plugin IntranetBanque sur le serveur Nova-Life) ----------
+// Le site ne touche jamais lui-même à l'argent du jeu : il garde une file d'opérations.
+// Le plugin vient la chercher, fait les virements en jeu, puis renvoie le résultat et les vrais soldes.
+
+function chargerOperations(): array
+{
+    return lireJson(fichier('operations.json'), []);
+}
+
+function sauverOperations(array $ops): void
+{
+    ecrireJson(fichier('operations.json'), array_slice(array_values($ops), -MAX_OPERATIONS));
+}
+
+function creerOperation(array $op): array
+{
+    $op += ['id' => uuid(), 'statut' => 'attente', 'erreur' => '', 'cree' => time(), 'maj' => time()];
+    $ops = chargerOperations();
+    $ops[] = $op;
+    sauverOperations($ops);
+    return $op;
+}
+
+// Argent déjà réservé par des opérations pas encore faites en jeu
+function montantEnAttente(callable $filtre): int
+{
+    $total = 0;
+    foreach (chargerOperations() as $op) {
+        if (in_array($op['statut'], ['attente', 'en_cours'], true) && $filtre($op)) {
+            $total += $op['montant'];
+        }
+    }
+    return $total;
+}
+
+function infoJeu(): array
+{
+    return lireJson(fichier('jeu.json'), ['entreprises' => [], 'derniereSynchro' => 0]);
+}
+
+function synchroActive(): bool
+{
+    return config('PLUGIN_CLE') !== '' && time() - (int) (infoJeu()['derniereSynchro'] ?? 0) < 120;
+}
+
+function exigerPlugin(): void
+{
+    $cle = config('PLUGIN_CLE');
+    if ($cle === '') {
+        throw new ApiErreur('Liaison avec le jeu désactivée : ajoute PLUGIN_CLE dans le fichier .env.', 503);
+    }
+    if (!hash_equals($cle, (string) ($_SERVER['HTTP_X_PLUGIN_CLE'] ?? ''))) {
+        throw new ApiErreur('Clé du plugin incorrecte.', 401);
+    }
+}
+
+function routesJeu(string $methode, string $route): void
+{
+    exigerPlugin();
+
+    // Le plugin récupère les opérations à faire et la liste de ce qu'il doit synchroniser
+    if ($methode === 'GET' && $route === 'jeu/travail') {
+        verrouiller();
+        $ops = chargerOperations();
+        $aFaire = [];
+        foreach ($ops as &$op) {
+            // Envoyée mais jamais confirmée : on ne la renvoie pas, pour ne pas payer deux fois
+            if ($op['statut'] === 'en_cours' && time() - $op['maj'] > 600) {
+                $op['statut'] = 'inconnu';
+                $op['erreur'] = "Le serveur de jeu n'a pas confirmé. Vérifie en jeu avant de refaire le virement.";
+                $op['maj'] = time();
+                majTransaction($op);
+            }
+            if ($op['statut'] === 'attente') {
+                $op['statut'] = 'en_cours';
+                $op['maj'] = time();
+                $aFaire[] = array_intersect_key($op, array_flip(['id', 'type', 'bizId', 'dePersonnage', 'versPersonnage', 'montant', 'motif']));
+            }
+        }
+        unset($op);
+        sauverOperations($ops);
+        $entreprises = array_values(array_filter(array_map(fn($e) => $e['bizId'] ?? null, chargerEntreprises())));
+        $personnages = array_values(array_filter(array_map(fn($c) => $c['personnageId'] ?? null, chargerStaff())));
+        repondre(200, ['operations' => $aFaire, 'entreprises' => $entreprises, 'personnages' => $personnages]);
+    }
+
+    // Le plugin renvoie le résultat des opérations et les soldes réels
+    if ($methode === 'POST' && $route === 'jeu/resultat') {
+        verrouiller();
+        $corps = lireCorps();
+        $resultats = [];
+        foreach ((array) ($corps['operations'] ?? []) as $r) {
+            if (is_array($r) && isset($r['id'])) {
+                $resultats[(string) $r['id']] = $r;
+            }
+        }
+        $ops = chargerOperations();
+        foreach ($ops as &$op) {
+            if (!isset($resultats[$op['id']])) {
+                continue;
+            }
+            $r = $resultats[$op['id']];
+            $op['statut'] = !empty($r['ok']) ? 'ok' : 'echec';
+            $op['erreur'] = texte($r['erreur'] ?? '', 200);
+            $op['maj'] = time();
+            majTransaction($op);
+        }
+        unset($op);
+        sauverOperations($ops);
+
+        $bizs = (array) ($corps['entreprises'] ?? []);
+        $liste = chargerEntreprises();
+        foreach ($liste as &$e) {
+            $b = $bizs[(string) ($e['bizId'] ?? '')] ?? null;
+            if (is_array($b) && isset($b['banque'])) {
+                $e['banqueJeu'] = (int) floor((float) $b['banque']);
+                $e['nomJeu'] = texte($b['nom'] ?? '', 60);
+                $e['soldeMaj'] = time();
+            }
+        }
+        unset($e);
+        sauverEntreprises($liste);
+
+        $persos = (array) ($corps['personnages'] ?? []);
+        $staff = chargerStaff();
+        foreach ($staff as &$c) {
+            $p = $persos[(string) ($c['personnageId'] ?? '')] ?? null;
+            if (is_array($p) && isset($p['banque'])) {
+                $c['banque'] = (int) floor((float) $p['banque']);
+                $c['personnageNom'] = texte($p['nom'] ?? ($c['personnageNom'] ?? ''), 60);
+                $c['banqueMaj'] = time();
+            }
+        }
+        unset($c);
+        sauverStaff($staff);
+
+        $info = infoJeu();
+        if (isset($corps['toutes']) && is_array($corps['toutes'])) {
+            $info['entreprises'] = array_values(array_map(fn($b) => ['id' => (int) ($b['id'] ?? 0), 'nom' => texte($b['nom'] ?? '', 60)], array_filter($corps['toutes'], 'is_array')));
+        }
+        $info['derniereSynchro'] = time();
+        ecrireJson(fichier('jeu.json'), $info);
+        repondre(200, ['ok' => true]);
+    }
+
+    // Un joueur a tapé /intranet CODE en jeu : on relie son personnage à son compte
+    if ($methode === 'POST' && $route === 'jeu/lier') {
+        verrouiller();
+        $corps = lireCorps();
+        $code = strtoupper(trim((string) ($corps['code'] ?? '')));
+        $perso = (int) ($corps['personnageId'] ?? 0);
+        if ($code === '' || $perso <= 0) {
+            throw new ApiErreur('Code ou personnage manquant.');
+        }
+        $staff = chargerStaff();
+        $idx = null;
+        foreach ($staff as $i => $c) {
+            if (($c['codeLiaison'] ?? '') === $code && ($c['codeExpire'] ?? 0) > time()) {
+                $idx = $i;
+            }
+        }
+        if ($idx === null) {
+            throw new ApiErreur('Code invalide ou expiré. Génère un nouveau code dans la tablette.', 404);
+        }
+        // Un personnage ne peut être relié qu'à un seul compte
+        foreach ($staff as $i => $c) {
+            if (($c['personnageId'] ?? null) === $perso) {
+                unset($staff[$i]['personnageId'], $staff[$i]['personnageNom'], $staff[$i]['banque'], $staff[$i]['banqueMaj']);
+            }
+        }
+        $staff[$idx]['personnageId'] = $perso;
+        $staff[$idx]['personnageNom'] = texte($corps['nom'] ?? '', 60);
+        unset($staff[$idx]['codeLiaison'], $staff[$idx]['codeExpire']);
+        sauverStaff($staff);
+        journal("Compte « {$staff[$idx]['identifiant']} » relié au personnage n°$perso");
+        repondre(200, ['identifiant' => $staff[$idx]['identifiant'], 'nom' => $staff[$idx]['nom']]);
+    }
+
+    throw new ApiErreur('Route inconnue.', 404);
+}
+
+// Reporte le statut d'une opération d'entreprise dans l'historique de l'entreprise
+function majTransaction(array $op): void
+{
+    if (($op['type'] ?? '') !== 'entreprise') {
+        return;
+    }
+    $liste = chargerEntreprises();
+    foreach ($liste as &$e) {
+        foreach ($e['transactions'] as &$t) {
+            if (($t['opId'] ?? null) === $op['id']) {
+                $t['statut'] = $op['statut'];
+                $t['erreur'] = $op['erreur'];
+            }
+        }
+        unset($t);
+    }
+    unset($e);
+    sauverEntreprises($liste);
+}
+
+// ---------- Banque du joueur ----------
+
+function routesBanque(string $methode, string $route, array $moi): void
+{
+    if ($methode === 'POST' && $route === 'moi/code-liaison') {
+        $alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+        $code = '';
+        for ($n = 0; $n < 6; $n++) {
+            $code .= $alphabet[random_int(0, strlen($alphabet) - 1)];
+        }
+        $staff = chargerStaff();
+        $idx = indexParId($staff, $moi['id']);
+        $staff[$idx]['codeLiaison'] = $code;
+        $staff[$idx]['codeExpire'] = time() + 900;
+        sauverStaff($staff);
+        repondre(200, ['code' => $code, 'expire' => $staff[$idx]['codeExpire']]);
+    }
+    if ($methode === 'DELETE' && $route === 'moi/liaison') {
+        $staff = chargerStaff();
+        $idx = indexParId($staff, $moi['id']);
+        unset($staff[$idx]['personnageId'], $staff[$idx]['personnageNom'], $staff[$idx]['banque'], $staff[$idx]['banqueMaj']);
+        sauverStaff($staff);
+        repondre(200, detailCompte($staff[$idx]));
+    }
+    if ($methode === 'GET' && $route === 'banque') {
+        $staff = chargerStaff();
+        $noms = [];
+        foreach ($staff as $c) {
+            $noms[$c['id']] = $c['nom'];
+        }
+        $mesOps = array_values(array_filter(chargerOperations(), fn($op) => ($op['de'] ?? null) === $moi['id'] || ($op['vers'] ?? null) === $moi['id']));
+        $mesOps = array_map(fn($op) => [
+            'id' => $op['id'], 'type' => $op['type'], 'montant' => $op['montant'], 'motif' => $op['motif'],
+            'statut' => $op['statut'], 'erreur' => $op['erreur'], 'date' => $op['cree'],
+            'sortant' => ($op['de'] ?? null) === $moi['id'],
+            'autre' => ($op['de'] ?? null) === $moi['id'] ? ($noms[$op['vers']] ?? 'Compte supprimé') : ($op['entrepriseNom'] ?? ($noms[$op['de'] ?? ''] ?? 'Compte supprimé')),
+        ], array_reverse($mesOps));
+        $perso = $moi['personnageId'] ?? null;
+        repondre(200, [
+            'personnage' => $perso ? ['id' => $perso, 'nom' => $moi['personnageNom'] ?? ''] : null,
+            'banque' => $perso && isset($moi['banque']) ? (int) $moi['banque'] : null,
+            'banqueMaj' => $moi['banqueMaj'] ?? null,
+            'enAttente' => $perso ? montantEnAttente(fn($op) => ($op['dePersonnage'] ?? null) === $perso) : 0,
+            'synchroActive' => synchroActive(),
+            'soldeIntranet' => (int) ($moi['solde'] ?? 0),
+            'operations' => array_slice($mesOps, 0, 50),
+        ]);
+    }
+    if ($methode === 'POST' && $route === 'banque/virements') {
+        $perso = $moi['personnageId'] ?? null;
+        if (!$perso) {
+            throw new ApiErreur("Relie d'abord ton personnage à ton compte (code à taper en jeu).");
+        }
+        $corps = lireCorps();
+        $somme = montant($corps['montant'] ?? null);
+        $staff = chargerStaff();
+        $idx = indexParIdentifiant($staff, trim((string) ($corps['vers'] ?? '')));
+        if ($idx === null) {
+            throw new ApiErreur('Aucun compte avec cet identifiant.');
+        }
+        $dest = $staff[$idx];
+        if ($dest['id'] === $moi['id']) {
+            throw new ApiErreur('Tu ne peux pas te faire un virement à toi-même.');
+        }
+        if (empty($dest['personnageId'])) {
+            throw new ApiErreur("{$dest['nom']} n'a pas encore relié son personnage : le virement ne peut pas arriver en jeu.");
+        }
+        if (!isset($moi['banque'])) {
+            throw new ApiErreur("Ton solde n'a pas encore été synchronisé avec le jeu. Réessaie dans quelques secondes.");
+        }
+        $dispo = (int) $moi['banque'] - montantEnAttente(fn($op) => ($op['dePersonnage'] ?? null) === $perso);
+        if ($somme > $dispo) {
+            throw new ApiErreur("Solde insuffisant ($dispo € disponibles).");
+        }
+        creerOperation(['type' => 'joueur', 'de' => $moi['id'], 'dePersonnage' => $perso, 'vers' => $dest['id'],
+            'versPersonnage' => (int) $dest['personnageId'], 'montant' => $somme, 'motif' => trim(texte($corps['motif'] ?? '', 100)) ?: 'Virement']);
+        journal("{$moi['identifiant']} : virement de $somme € vers {$dest['identifiant']}");
+        repondre(201, ['ok' => true]);
+    }
 }
 
 function dispatch(): void
@@ -986,6 +1344,9 @@ function dispatch(): void
     if ($methode === 'POST' && $route === 'inscription') {
         inscription();
     }
+    if (strncmp($route, 'jeu/', 4) === 0) {
+        routesJeu($methode, $route);
+    }
 
     // Routes qui demandent une session (joueurs, staff et admins)
     $moi = compteDepuisRequete();
@@ -1000,6 +1361,9 @@ function dispatch(): void
     }
     if ($methode === 'PUT' && $route === 'moi') {
         modifierSoi($moi);
+    }
+    if ($route === 'banque' || strncmp($route, 'banque/', 7) === 0 || strncmp($route, 'moi/', 4) === 0) {
+        routesBanque($methode, $route, $moi);
     }
     if (strncmp($route, 'entreprises', 11) === 0) {
         routesEntreprises($methode, $route, $moi);

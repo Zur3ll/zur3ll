@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <AssemblyName>IntranetBanque</AssemblyName>
+    <RootNamespace>IntranetBanque</RootNamespace>
+    <LangVersion>latest</LangVersion>
+    <!-- Dossier Managed du serveur ou du jeu. Surchargeable : dotnet build /p:NovaLifeRefs=chemin -->
+    <NovaLifeRefs Condition=" '$(NovaLifeRefs)' == '' ">E:\SteamLibrary\steamapps\common\Nova-Life\Nova-Life_Data\Managed</NovaLifeRefs>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="Assembly-CSharp" HintPath="$(NovaLifeRefs)\Assembly-CSharp.dll" Private="false" />
+    <Reference Include="Mirror" HintPath="$(NovaLifeRefs)\Mirror.dll" Private="false" />
+    <Reference Include="Newtonsoft.Json" HintPath="$(NovaLifeRefs)\Newtonsoft.Json.dll" Private="false" />
+    <Reference Include="UnityEngine" HintPath="$(NovaLifeRefs)\UnityEngine.dll" Private="false" />
+    <Reference Include="UnityEngine.CoreModule" HintPath="$(NovaLifeRefs)\UnityEngine.CoreModule.dll" Private="false" />
+    <Reference Include="System.Net.Http" />
+  </ItemGroup>
+
+</Project>

@@ -222,6 +222,14 @@ details.rule ol { margin: 0 0 16px; padding-left: 22px; display: flex; flex-dire
 .money-card span { opacity: .8; font-size: 13px; }
 @media (min-width: 761px) { .back.narrow-only { display: none; } }
 
+/* Banque */
+.bank-card { border-radius: 20px; padding: 24px 26px; background: linear-gradient(135deg, #10b981, #065f46 70%); display: flex; flex-direction: column; gap: 4px; box-shadow: 0 10px 30px rgba(6, 95, 70, .35); }
+.bank-card small { opacity: .85; font-weight: 600; }
+.bank-card strong { font-size: 42px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.bank-card span { opacity: .85; font-size: 13px; }
+.code-box { font: 700 40px/1 ui-monospace, "SF Mono", Consolas, monospace; letter-spacing: .25em; margin: 18px auto 12px; padding: 16px 20px; border-radius: 14px; background: rgba(255, 255, 255, .08); display: inline-block; user-select: all; }
+.ent-solde small + small { margin-top: 2px; color: #ffb85c; }
+
 /* Gestion entreprise */
 .head-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
 .head-row h2 { margin: 0; font-size: 22px; }
@@ -424,6 +432,7 @@ const GLYPHS = {
   argent: S('<rect x="3.5" y="6.5" width="17" height="12" rx="2.5"/><path d="M3.5 10.5h17M7 15h4"/>', 'stroke-width="2"'),
   fond: S('<rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><path d="m4 16 5-5 4 4 2.5-2.5L20 17"/><circle cx="15.5" cy="9" r="1.4"/>', 'stroke-width="2"'),
   info: S('<circle cx="12" cy="12" r="8.5"/><path d="M12 11v5.5"/><circle cx="12" cy="7.8" r=".8" fill="#fff"/>', 'stroke-width="2"'),
+  banque: S('<path d="M3.5 9.5 12 4l8.5 5.5" fill="rgba(255,255,255,.2)"/><path d="M5.5 10v7M9.5 10v7M14.5 10v7M18.5 10v7M3.5 19.5h17"/>', 'stroke-width="2"'),
   support: S('<circle cx="12" cy="12" r="8.5" fill="rgba(255,255,255,.2)"/><path d="M9.6 9.4a2.5 2.5 0 0 1 4.8 1c0 1.7-2.4 2.1-2.4 3.6"/><circle cx="12" cy="17" r=".7" fill="#fff"/>', 'stroke-width="2"'),
 };
 
@@ -439,10 +448,11 @@ const APPS = [
   { id: "calculatrice", nom: "Calculatrice", bg: "linear-gradient(160deg,#4b4b4f,#1d1d20)" },
   { id: "notes", nom: "Notes", bg: "linear-gradient(160deg,#ffe066,#f5b700)" },
   { id: "reglages", nom: "Réglages", bg: "linear-gradient(160deg,#a3a7b3,#62666f)" },
+  { id: "banque", nom: "Banque", bg: "linear-gradient(160deg,#34d399,#0f8a5f)" },
   { id: "gestion", nom: "Gestion entreprise", bg: "linear-gradient(160deg,#7c6cff,#3b2bb5)" },
   { id: "staff", nom: "Staff", bg: "linear-gradient(160deg,#3b3f58,#14162a)" },
 ];
-const PAGE1 = ["gestion", "entreprises", "emplois", "calendrier", "reglement", "support", "liens"];
+const PAGE1 = ["banque", "gestion", "entreprises", "emplois", "calendrier", "reglement", "support", "liens"];
 const PAGE2 = ["calculatrice", "annuaire", "actualites", "staff"];
 const DOCK = ["actualites", "annuaire", "notes", "reglages"];
 
@@ -641,7 +651,7 @@ function renderApp(id) {
   ({
     actualites: appActualites, annuaire: appAnnuaire, entreprises: appEntreprises, emplois: appEmplois,
     calendrier: appCalendrier, reglement: appReglement, support: appSupport, liens: appLiens,
-    calculatrice: appCalculatrice, notes: appNotes, reglages: () => appReglages(null), staff: appStaff, gestion: appGestion,
+    calculatrice: appCalculatrice, notes: appNotes, reglages: () => appReglages(null), staff: appStaff, gestion: appGestion, banque: appBanque,
   })[id]();
 }
 
@@ -865,7 +875,7 @@ function appReglages(r = rubrique) {
     ? `<button class="banner${rubrique === "compte" ? " sel" : ""}" type="button" data-rub="compte"><span class="avatar big" style="background:${couleur(c.nom)}">${esc(initiales(c.nom))}</span><span class="grow"><strong>${esc(c.nom)}</strong><small>Compte Neoran, profil, sécurité</small></span><span class="end">›</span></button>`
     : `<button class="banner${rubrique === "compte" ? " sel" : ""}" type="button" data-rub="compte"><span class="avatar big" style="background:#6b7086">${GLYPHS.compte}</span><span class="grow"><strong>Se connecter</strong><small>Accède à ton entreprise, tes virements et ton profil.</small></span><span class="end">›</span></button>`;
   const liste = `${banniere}
-    <div class="list" style="margin-top:18px">${c ? ligne("argent", "Portefeuille", "linear-gradient(160deg,#5be29b,#13a05a)", GLYPHS.argent, euros(c.solde)) : ""}${ligne("fond", "Fond d'écran", "linear-gradient(160deg,#5ea8ff,#2563eb)", GLYPHS.fond)}${ligne("apropos", "À propos", "linear-gradient(160deg,#a3a7b3,#62666f)", GLYPHS.info)}</div>`;
+    <div class="list" style="margin-top:18px">${c ? ligne("argent", "Banque et personnage", "linear-gradient(160deg,#34d399,#0f8a5f)", GLYPHS.banque, c.personnage ? esc(c.personnage.nom) : "Non relié") : ""}${ligne("fond", "Fond d'écran", "linear-gradient(160deg,#5ea8ff,#2563eb)", GLYPHS.fond)}${ligne("apropos", "À propos", "linear-gradient(160deg,#a3a7b3,#62666f)", GLYPHS.info)}</div>`;
   setView(`<div class="split-set${rubrique ? " has-detail" : ""}"><div class="set-list">${liste}</div><div class="set-detail" id="set-detail"></div></div>`,
     rubrique ? { back: () => appReglages(null), etroitSeulement: true } : {});
   $("#app-body").querySelectorAll("[data-rub]").forEach((b) => (b.onclick = () => appReglages(b.dataset.rub)));
@@ -909,9 +919,16 @@ function reglageCompte(zone) {
 async function reglageArgent(zone) {
   await rafraichirCompte();
   const c = session?.compte; if (!c) return reglageCompte(zone);
-  zone.innerHTML = `<div class="money-card"><small>Solde de ton compte Neoran</small><strong>${euros(c.solde)}</strong><span>Salaires et virements reçus de tes entreprises sur l'intranet.</span></div>
-    <div class="section-title">Derniers mouvements</div>
-    ${c.historique?.length ? `<div class="list">${c.historique.map((h) => `<div class="row"><span class="grow"><strong>${esc(h.libelle)}</strong><small>${dateHeure(h.date)}</small></span><span class="end" style="color:#5be29b;font-weight:700">+${euros(h.montant)}</span></div>`).join("")}</div>` : `<p class="empty">Aucun mouvement pour le moment.</p>`}`;
+  zone.innerHTML = `<div class="section-title" style="margin-top:0">Personnage en jeu</div>
+    <div class="list"><div class="row"><span class="mini-ico" style="background:linear-gradient(160deg,#34d399,#0f8a5f)">${GLYPHS.banque}</span><span class="grow"><strong>${c.personnage ? esc(c.personnage.nom || "Personnage n°" + c.personnage.id) : "Aucun personnage relié"}</strong><small>${c.personnage ? "Ta banque en jeu est visible dans l'app Banque." : "Relie ton personnage pour utiliser ta vraie banque depuis la tablette."}</small></span></div></div>
+    <p class="msg" id="staff-msg" style="margin-top:12px"></p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button class="btn" type="button" id="go-bank">${c.personnage ? "Ouvrir la Banque" : "Relier mon personnage"}</button>${c.personnage ? '<button class="btn danger" type="button" id="unlink">Délier le personnage</button>' : ""}</div>`;
+  $("#go-bank").onclick = () => { current = "banque"; $("#app-title").textContent = "Banque"; appBanque(); };
+  const del = $("#unlink");
+  if (del) del.onclick = () => {
+    if (del.dataset.confirm !== "1") { del.dataset.confirm = "1"; del.textContent = "Confirmer"; return; }
+    avecMessage(del, async () => { session.compte = await api("DELETE", "moi/liaison"); sauverSession(); appReglages("argent"); });
+  };
 }
 
 function reglageFond(zone) {
@@ -1061,6 +1078,70 @@ function staffCompteForm(c) {
 }
 
 /* =====================================================================
+   BANQUE : le vrai compte en banque du personnage, via le plugin du serveur de jeu
+   ===================================================================== */
+const STATUTS = { attente: ["En attente", "grey"], en_cours: ["En cours", "orange"], ok: ["Effectué", "green"], echec: ["Échoué", "red"], inconnu: ["À vérifier", "red"] };
+const opPill = (s) => s ? `<span class="pill ${STATUTS[s]?.[1] || "grey"}">${STATUTS[s]?.[0] || s}</span>` : "";
+const ilYa = (ts) => { if (!ts) return "jamais"; const s = Math.max(0, Math.round(Date.now() / 1000 - ts)); return s < 60 ? `il y a ${s} s` : s < 3600 ? `il y a ${Math.round(s / 60)} min` : `il y a ${Math.round(s / 3600)} h`; };
+
+async function appBanque() {
+  if (!session) return vueConnexion(appBanque, { avant: `<p class="meta" style="text-align:center;margin:0 0 18px">La banque demande un compte Neoran relié à ton personnage.</p>` });
+  let b;
+  try { b = await api("GET", "banque"); } catch (e) { if (!session) return appBanque(); return setView(`<p class="msg ko" id="staff-msg">${esc(e.message)}</p>`); }
+  if (!b.personnage) return vueLiaison(b);
+  const dispo = (b.banque ?? 0) - b.enAttente;
+  setView(`<div class="bank-card"><small>${esc(b.personnage.nom || "Mon personnage")} · Compte courant</small>
+      <strong>${b.banque == null ? "—" : euros(b.banque)}</strong>
+      <span>${b.banque == null ? "En attente de la première synchronisation avec le jeu." : `Solde réel en jeu, mis à jour ${ilYa(b.banqueMaj)}${b.enAttente ? ` · ${euros(b.enAttente)} en cours d'envoi` : ""}`}</span></div>
+    ${b.synchroActive ? "" : `<p class="msg ko" style="margin-top:12px">Le serveur de jeu ne répond pas en ce moment : les virements partiront dès qu'il sera de retour.</p>`}
+    <div class="two-col" style="margin-top:18px">
+      <form class="detail form" id="bk-form"><div class="section-title" style="margin:0">Faire un virement</div>
+        <label class="field" for="bk-vers"><span>Identifiant Neoran du destinataire</span><input id="bk-vers" required autocomplete="off" placeholder="ex. lea"></label>
+        <label class="field" for="bk-mt"><span>Montant (€)${b.banque != null ? ` · ${euros(Math.max(0, dispo))} disponibles` : ""}</span><input id="bk-mt" type="number" min="1" step="1" required></label>
+        <label class="field" for="bk-motif"><span>Motif</span><input id="bk-motif" placeholder="Loyer, remboursement…"></label>
+        <p class="msg" id="staff-msg"></p>
+        <button class="btn" type="submit">Envoyer le virement</button>
+        <p class="meta" style="margin:0">L'argent part de ton compte en banque en jeu et arrive sur celui du destinataire, en général en moins de 15 secondes.</p></form>
+      <div><div class="section-title" style="margin-top:0">Opérations</div>${operationsHtml(b.operations)}</div>
+    </div>
+    ${b.soldeIntranet ? `<p class="meta" style="margin-top:16px">Ancien solde intranet (non relié au jeu) : ${euros(b.soldeIntranet)}.</p>` : ""}`);
+  $("#bk-form").onsubmit = (e) => { e.preventDefault(); avecMessage(e.submitter, async () => {
+    await api("POST", "banque/virements", { vers: $("#bk-vers").value.trim(), montant: Number($("#bk-mt").value), motif: $("#bk-motif").value.trim() });
+    await appBanque(); message("Virement envoyé au serveur de jeu.", true);
+  }); };
+  // Rafraîchit le solde et le statut des virements tant que la banque est ouverte
+  const vue = $("#app-body .app-inner");
+  tchatMinuteur = setInterval(async () => {
+    if (current !== "banque" || !document.body.contains(vue) || document.activeElement?.closest?.("#bk-form")) return;
+    try { const n = await api("GET", "banque"); if (JSON.stringify(n) !== JSON.stringify(b)) { b = n; clearInterval(tchatMinuteur); appBanque(); } } catch {}
+  }, 8000);
+}
+
+function operationsHtml(liste) {
+  if (!liste.length) return `<p class="empty">Aucune opération pour le moment.</p>`;
+  return `<div class="list">${liste.map((o) => `<div class="row"><span class="grow"><strong>${o.sortant ? "Vers " : "De "}${esc(o.autre)}</strong><small>${esc(o.motif)} · ${dateHeure(o.date)}${o.erreur ? " · " + esc(o.erreur) : ""}</small></span>${opPill(o.statut)}<span class="end" style="font-weight:700;color:${o.sortant ? "#ff8a8d" : "#5be29b"}">${o.sortant ? "−" : "+"}${euros(o.montant)}</span></div>`).join("")}</div>`;
+}
+
+// Le joueur prouve qu'il contrôle le personnage en tapant un code en jeu
+function vueLiaison(b, code) {
+  setView(`<div class="detail" style="max-width:560px;margin:10px auto 0;text-align:center">
+      <div class="auth-logo" style="background:linear-gradient(160deg,#5be29b,#13a05a)">${GLYPHS.banque}</div>
+      <h2 style="margin-top:12px">Relie ton personnage</h2>
+      <p style="margin:8px auto 0">Pour voir et utiliser ton vrai compte en banque, relie ton compte Neoran à ton personnage en jeu.</p>
+      ${code ? `<div class="code-box">${esc(code.code)}</div><p style="margin:0 auto">En jeu, ouvre le chat et tape&nbsp;: <strong>/intranet ${esc(code.code)}</strong></p><p class="meta" style="margin:8px 0 0">Code valable 15 minutes. Cette page se met à jour toute seule une fois le code tapé.</p>`
+        : `<button class="btn" type="button" id="lk-code" style="margin-top:16px">Obtenir mon code</button>`}
+      <p class="msg" id="staff-msg" style="margin-top:12px"></p>
+    </div>
+    ${b.soldeIntranet ? `<p class="meta" style="text-align:center;margin-top:16px">Ancien solde intranet (non relié au jeu) : ${euros(b.soldeIntranet)}.</p>` : ""}`);
+  const bouton = $("#lk-code");
+  if (bouton) bouton.onclick = () => avecMessage(bouton, async () => vueLiaison(b, await api("POST", "moi/code-liaison")));
+  if (code) tchatMinuteur = setInterval(async () => {
+    if (current !== "banque") return clearInterval(tchatMinuteur);
+    try { const n = await api("GET", "banque"); if (n.personnage) { clearInterval(tchatMinuteur); await rafraichirCompte(); appBanque(); } } catch {}
+  }, 4000);
+}
+
+/* =====================================================================
    GESTION ENTREPRISE
    L'argent affiché ici est celui de l'intranet : il n'est pas relié à la banque du jeu.
    ===================================================================== */
@@ -1105,7 +1186,8 @@ async function vueEntreprise(id, deja) {
   const monGrade = e.monGrade || "staff";
   const onglets = [["apercu", "Aperçu"], ["employes", "Employés"], ["virements", e.peutGerer ? "Virements" : "Mes paiements"], ["regles", "Règles"], ["tchat", "Tchat"], ...(monGrade === "patron" || e.estStaff ? [["parametres", "Paramètres"]] : [])];
   if (!onglets.some(([k]) => k === ongletEntreprise)) ongletEntreprise = "apercu";
-  setView(`<div class="ent-head"><span class="avatar big" style="background:${couleur(e.nom)};border-radius:16px">${esc(initiales(e.nom))}</span><div class="grow"><h2>${esc(e.nom)}</h2><div class="meta">${esc(e.secteur || "Secteur non précisé")} · ${gradePill(monGrade)}</div></div>${e.solde != null ? `<div class="ent-solde"><small>Trésorerie</small><strong>${euros(e.solde)}</strong></div>` : ""}</div>
+  setView(`<div class="ent-head"><span class="avatar big" style="background:${couleur(e.nom)};border-radius:16px">${esc(initiales(e.nom))}</span><div class="grow"><h2>${esc(e.nom)}</h2><div class="meta">${esc(e.secteur || "Secteur non précisé")} · ${gradePill(monGrade)}${e.liee ? ' <span class="pill green">Reliée au jeu</span>' : ""}</div></div>${e.peutGerer ? `<div class="ent-solde"><small>${e.liee ? `Banque en jeu · ${ilYa(e.soldeMaj)}` : "Trésorerie"}</small><strong>${e.solde == null ? "—" : euros(e.solde)}</strong>${e.enAttente ? `<small>${euros(e.enAttente)} en cours d'envoi</small>` : ""}</div>` : ""}</div>
+    ${e.liee && e.peutGerer && !e.synchroActive ? `<p class="msg ko" style="margin:0 0 12px">Le serveur de jeu ne répond pas en ce moment : les virements partiront dès qu'il sera de retour.</p>` : ""}
     <div class="segmented" role="tablist">${onglets.map(([k, n]) => `<button type="button" role="tab" aria-selected="${k === ongletEntreprise}" data-tab="${k}">${n}</button>`).join("")}</div>
     <p class="msg" id="staff-msg"></p>
     <div id="ent-zone"></div>`, { back: appGestion });
@@ -1117,7 +1199,7 @@ async function vueEntreprise(id, deja) {
   if (ongletEntreprise === "apercu") {
     const moiMembre = e.membres.find((m) => m.compteId === moi);
     zone.innerHTML = `<div class="stats">
-        ${e.solde != null ? `<div class="stat"><small>Trésorerie</small><strong>${euros(e.solde)}</strong></div>` : ""}
+        ${e.peutGerer ? `<div class="stat"><small>${e.liee ? "Banque en jeu" : "Trésorerie"}</small><strong>${e.solde == null ? "—" : euros(e.solde)}</strong></div>` : ""}
         <div class="stat"><small>Membres</small><strong>${e.membres.length}</strong></div>
         ${e.peutGerer ? `<div class="stat"><small>Masse salariale</small><strong>${euros(masse)}</strong></div>` : ""}
         ${moiMembre ? `<div class="stat"><small>Mon salaire</small><strong>${euros(moiMembre.salaire)}</strong></div>` : ""}
@@ -1135,7 +1217,7 @@ async function vueEntreprise(id, deja) {
         <label class="field" for="add-sal"><span>Salaire (€)</span><input id="add-sal" type="number" min="0" step="1" value="0"></label>
         ${monGrade === "patron" ? `<label class="field" for="add-grade"><span>Grade</span><select id="add-grade"><option value="employe">Employé</option><option value="gerant">Gérant</option></select></label>` : ""}</div>
         <button class="btn" type="submit">Ajouter</button></form>` : ""}
-      <div class="list" style="margin-top:16px">${membres.map((m) => `<div class="row wrap"><span class="avatar" style="background:${couleur(m.nom)}">${esc(initiales(m.nom))}</span><span class="grow"><strong>${esc(m.nom)}${m.compteId === moi ? " (moi)" : ""}</strong><small>${esc(m.poste)} · ${esc(m.identifiant)}${m.telephone ? " · " + esc(m.telephone) : ""}</small></span>${gradePill(m.grade)}${e.peutGerer ? `<span class="end">${euros(m.salaire)}</span>` : ""}${peutModifier(m) && m.compteId !== moi ? `<button class="btn ghost" type="button" data-edit="${m.compteId}">Modifier</button>` : ""}${m.compteId === moi && m.grade !== "patron" ? `<button class="btn danger" type="button" data-quit="${m.compteId}">Quitter</button>` : ""}</div>`).join("")}</div>`;
+      <div class="list" style="margin-top:16px">${membres.map((m) => `<div class="row wrap"><span class="avatar" style="background:${couleur(m.nom)}">${esc(initiales(m.nom))}</span><span class="grow"><strong>${esc(m.nom)}${m.compteId === moi ? " (moi)" : ""}</strong><small>${esc(m.poste)} · ${esc(m.identifiant)}${m.telephone ? " · " + esc(m.telephone) : ""}</small></span>${gradePill(m.grade)}${e.liee && !m.lie ? '<span class="pill red" title="Il doit relier son personnage dans l\'app Banque pour recevoir des virements">Personnage non relié</span>' : ""}${e.peutGerer ? `<span class="end">${euros(m.salaire)}</span>` : ""}${peutModifier(m) && m.compteId !== moi ? `<button class="btn ghost" type="button" data-edit="${m.compteId}">Modifier</button>` : ""}${m.compteId === moi && m.grade !== "patron" ? `<button class="btn danger" type="button" data-quit="${m.compteId}">Quitter</button>` : ""}</div>`).join("")}</div>`;
     if (e.peutGerer) $("#add-form").onsubmit = (ev) => { ev.preventDefault(); avecMessage(ev.submitter, async () => {
       recharger(await api("POST", `entreprises/${id}/membres`, { identifiant: $("#add-id").value.trim(), poste: $("#add-poste").value.trim(), salaire: $("#add-sal").value, grade: $("#add-grade")?.value || "employe" }), "Employé ajouté.");
     }); };
@@ -1157,7 +1239,8 @@ async function vueEntreprise(id, deja) {
         <div class="detail form"><div class="section-title" style="margin:0">Salaires</div>
           <p style="margin:0">${aPayer.length} employé(s) avec un salaire, pour un total de <strong>${euros(masse)}</strong>.</p>
           <button class="btn" type="button" id="pay-all"${aPayer.length ? "" : " disabled"}>Payer tous les salaires</button>
-          ${e.estStaff ? `<div class="section-title" style="margin:10px 0 0">Trésorerie (staff)</div>
+          ${e.liee ? `<p class="meta" style="margin:0">Les virements et salaires sont payés avec la vraie banque de l'entreprise en jeu, en général en moins de 15 secondes. Chaque employé doit avoir relié son personnage (app Banque).</p>` : ""}
+          ${e.estStaff && !e.liee ? `<div class="section-title" style="margin:10px 0 0">Trésorerie (staff)</div>
           <label class="field" for="tr-mt"><span>Montant (€)</span><input id="tr-mt" type="number" min="1" step="1"></label>
           <label class="field" for="tr-motif"><span>Motif</span><input id="tr-motif" placeholder="Capital de départ, amende…"></label>
           <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" type="button" data-tr="depot">Créditer</button><button class="btn danger" type="button" data-tr="retrait">Débiter</button></div>` : ""}
@@ -1166,12 +1249,12 @@ async function vueEntreprise(id, deja) {
       : `<div class="section-title" style="margin-top:0">Mes paiements reçus</div>${transactionsHtml(e.transactions)}`;
     if (!e.peutGerer) return;
     $("#vir-form").onsubmit = (ev) => { ev.preventDefault(); avecMessage(ev.submitter, async () => {
-      recharger(await api("POST", `entreprises/${id}/virements`, { vers: $("#vir-vers").value, montant: Number($("#vir-mt").value), motif: $("#vir-motif").value.trim() }), "Virement envoyé.");
+      recharger(await api("POST", `entreprises/${id}/virements`, { vers: $("#vir-vers").value, montant: Number($("#vir-mt").value), motif: $("#vir-motif").value.trim() }), e.liee ? "Virement envoyé au serveur de jeu." : "Virement envoyé.");
     }); };
     const pay = $("#pay-all");
     pay.onclick = () => {
       if (pay.dataset.confirm !== "1") { pay.dataset.confirm = "1"; pay.textContent = `Confirmer le paiement de ${euros(masse)}`; return; }
-      avecMessage(pay, async () => recharger(await api("POST", `entreprises/${id}/salaires`, {}), "Salaires payés."));
+      avecMessage(pay, async () => recharger(await api("POST", `entreprises/${id}/salaires`, {}), e.liee ? "Salaires envoyés au serveur de jeu." : "Salaires payés."));
     };
     zone.querySelectorAll("[data-tr]").forEach((b) => (b.onclick = () => avecMessage(b, async () => {
       recharger(await api("POST", `entreprises/${id}/tresorerie`, { type: b.dataset.tr, montant: Number($("#tr-mt").value), motif: $("#tr-motif").value.trim() }), b.dataset.tr === "depot" ? "Trésorerie créditée." : "Trésorerie débitée.");
@@ -1193,10 +1276,23 @@ async function vueEntreprise(id, deja) {
     zone.innerHTML = `<form class="detail form" id="par-form"><label class="field" for="par-nom"><span>Nom de l'entreprise</span><input id="par-nom" value="${esc(e.nom)}"></label>
         <label class="field" for="par-sec"><span>Secteur d'activité</span><input id="par-sec" value="${esc(e.secteur)}"></label>
         <button class="btn" type="submit">Enregistrer</button></form>
+      <form class="detail form" id="biz-form" style="margin-top:16px"><div class="section-title" style="margin:0">Entreprise en jeu</div>
+        <p style="margin:0">${e.liee ? `Reliée à l'entreprise en jeu n°${e.bizId}${e.nomJeu ? ` (${esc(e.nomJeu)})` : ""}. Le solde et les virements utilisent sa vraie banque.` : "Pas encore reliée : l'argent affiché est celui de l'intranet, pas celui du jeu."}</p>
+        ${e.estStaff ? `${e.entreprisesJeu.length ? `<label class="field" for="biz-sel"><span>Choisir l'entreprise du jeu</span><select id="biz-sel"><option value="">—</option>${e.entreprisesJeu.map((b) => `<option value="${b.id}"${b.id === e.bizId ? " selected" : ""}>n°${b.id} · ${esc(b.nom)}</option>`).join("")}</select></label>` : ""}
+        <label class="field" for="biz-id"><span>ID de l'entreprise en jeu</span><input id="biz-id" type="number" min="1" step="1" value="${e.bizId ?? ""}" placeholder="ex. 12"></label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" type="submit">Relier</button>${e.liee ? '<button class="btn danger" type="button" id="biz-off">Délier</button>' : ""}</div>`
+        : `<p class="meta" style="margin:0">Seul le staff peut relier l'entreprise à son ID en jeu (pour éviter qu'on relie l'entreprise de quelqu'un d'autre). Demande-le au staff.</p>`}</form>
       ${e.estStaff ? `<div class="detail form" style="margin-top:16px"><div class="section-title" style="margin:0">Zone staff</div><p style="margin:0">Supprime l'entreprise, ses employés, son historique et son tchat. C'est définitif.</p><button class="btn danger" type="button" id="ent-del">Supprimer l'entreprise</button></div>` : ""}`;
     $("#par-form").onsubmit = (ev) => { ev.preventDefault(); avecMessage(ev.submitter, async () => {
       recharger(await api("PUT", "entreprises/" + id, { nom: $("#par-nom").value.trim(), secteur: $("#par-sec").value.trim() }), "Entreprise mise à jour.");
     }); };
+    const sel = $("#biz-sel");
+    if (sel) sel.onchange = () => { $("#biz-id").value = sel.value; };
+    if (e.estStaff) $("#biz-form").onsubmit = (ev) => { ev.preventDefault(); avecMessage(ev.submitter, async () => {
+      recharger(await api("PUT", "entreprises/" + id, { bizId: $("#biz-id").value.trim() || null }), "Entreprise reliée au jeu. Le solde s'affiche à la prochaine synchronisation (moins de 15 secondes).");
+    }); };
+    const off = $("#biz-off");
+    if (off) off.onclick = () => avecMessage(off, async () => recharger(await api("PUT", "entreprises/" + id, { bizId: null }), "Entreprise déliée du jeu."));
     const del = $("#ent-del");
     if (del) del.onclick = () => {
       if (del.dataset.confirm !== "1") { del.dataset.confirm = "1"; del.textContent = "Confirmer la suppression définitive"; return; }
@@ -1210,7 +1306,7 @@ function transactionsHtml(liste) {
   const lib = { virement: "Virement", salaire: "Salaire", depot: "Crédit staff", retrait: "Débit staff" };
   return `<div class="list">${liste.map((t) => {
     const entree = t.type === "depot";
-    return `<div class="row"><span class="grow"><strong>${lib[t.type] || t.type}${t.versNom ? " → " + esc(t.versNom) : ""}</strong><small>${esc(t.motif)} · par ${esc(t.parNom)} · ${dateHeure(t.date)}</small></span><span class="end" style="font-weight:700;color:${entree ? "#5be29b" : "#ff8a8d"}">${entree ? "+" : "−"}${euros(t.montant)}</span></div>`;
+    return `<div class="row"><span class="grow"><strong>${lib[t.type] || t.type}${t.versNom ? " → " + esc(t.versNom) : ""}</strong><small>${esc(t.motif)} · par ${esc(t.parNom)} · ${dateHeure(t.date)}${t.erreur ? " · " + esc(t.erreur) : ""}</small></span>${opPill(t.statut)}<span class="end" style="font-weight:700;color:${entree ? "#5be29b" : "#ff8a8d"}">${entree ? "+" : "−"}${euros(t.montant)}</span></div>`;
   }).join("")}</div>`;
 }
 

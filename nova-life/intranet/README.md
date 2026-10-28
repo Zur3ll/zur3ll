@@ -8,7 +8,7 @@ Version PHP : elle tourne sur un hébergement Web classique (Apache + PHP), sans
 - `index.html` : la page de la tablette.
 - `api.php` : l'API (contenu, comptes, connexion, entreprises, tchat).
 - `.htaccess` : redirige `/api/...` vers `api.php` et bloque l'accès aux fichiers cachés.
-- `.env` : configuration secrète (mot de passe admin). À créer à partir de `.env.example`. Ne pas partager.
+- `.env` : configuration secrète (mot de passe admin, `PLUGIN_CLE` pour la liaison avec le jeu). À créer à partir de `.env.example`. Ne pas partager.
 - `data/` : créé automatiquement, contient le contenu, les comptes (`staff.json`), les entreprises (`entreprises.json`) et les tchats (`tchat-<id>.json`). Protégé par `data/.htaccess`. À sauvegarder, ne pas partager.
 - `DEPLOIEMENT-INFOMANIAK.md` : étapes de mise en ligne.
 
@@ -71,7 +71,20 @@ L'app **Gestion entreprise** (première icône de l'accueil) :
 - **Onglets :** Aperçu, Employés (ajout par identifiant de compte, poste, salaire, grade), Virements (virement à un employé, « Payer tous les salaires », historique), Règles internes, Tchat (nouveaux messages toutes les 4 secondes) et Paramètres.
 - **Staff :** voit et gère toutes les entreprises comme un patron, crédite ou débite la trésorerie et peut supprimer une entreprise.
 
-**Important : l'argent de l'intranet n'est pas relié à la banque du jeu.** La trésorerie d'une entreprise ne bouge que par les crédits et débits du staff, les virements et les salaires. Le staff s'en sert pour refléter l'argent réel de l'entreprise en jeu.
+**Argent :** une entreprise non reliée utilise un solde propre à l'intranet (crédité ou débité par le staff). Une entreprise **reliée au jeu** utilise sa vraie banque en jeu : voir plus bas.
+
+## Liaison avec le jeu (banque réelle)
+
+Le plugin **IntranetBanque** (dossier `nova-life/IntranetBanque`), installé sur le serveur Nova-Life, relie la tablette à la vraie banque du jeu. Toutes les 10 secondes, il récupère les virements demandés sur la tablette, les fait en jeu, puis renvoie le résultat et les vrais soldes.
+
+1. Dans le `.env` du site, ajoute une ligne `PLUGIN_CLE=` suivie d'une longue phrase secrète (au moins 32 caractères au hasard).
+2. Installe le plugin et mets la même clé dans `Plugins/IntranetBanque/config.json` (voir son README).
+
+Ensuite :
+- **Joueurs :** dans l'app **Banque**, « Obtenir mon code », puis taper `/intranet CODE` en jeu. Le compte voit alors la vraie banque de son personnage et peut faire des virements à d'autres joueurs reliés (par identifiant Neoran).
+- **Entreprises :** dans Gestion entreprise → Paramètres → **Entreprise en jeu**, le staff choisit l'entreprise du jeu (ou tape son ID). Seul le staff peut le faire : un patron pourrait sinon relier l'entreprise de quelqu'un d'autre. Le solde affiché devient celui du jeu, et les virements et salaires sont payés avec la banque de l'entreprise en jeu. Chaque employé payé doit avoir relié son personnage.
+- **Statuts :** chaque virement passe par « En attente », « En cours », puis « Effectué » ou « Échoué » (avec la raison, par exemple un solde insuffisant en jeu). Si le serveur de jeu ne confirme pas dans les 10 minutes, l'opération passe en « À vérifier » et n'est jamais refaite automatiquement, pour ne pas payer deux fois.
+- L'argent déjà en cours d'envoi est réservé : on ne peut pas dépenser deux fois la même somme.
 
 ## Espace staff
 
