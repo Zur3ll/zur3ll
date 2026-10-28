@@ -1323,6 +1323,312 @@ function routesBanque(string $methode, string $route, array $moi): void
     }
 }
 
+// ---------- N : réseau social façon X (Twitter), en simple ----------
+
+const N_MAX_POSTS = 3000;
+const N_LONGUEUR = 280;
+
+function auteursParId(): array
+{
+    $auteurs = [];
+    foreach (chargerStaff() as $c) {
+        $auteurs[$c['id']] = ['nom' => $c['nom'], 'identifiant' => $c['identifiant'], 'staff' => estStaff($c)];
+    }
+    return $auteurs;
+}
+
+function publierPost(array $p, array $auteurs, array $tous, array $moi): array
+{
+    $a = $auteurs[$p['auteur']] ?? ['nom' => 'Compte supprimé', 'identifiant' => '', 'staff' => false];
+    $reponses = 0;
+    foreach ($tous as $q) {
+        if (($q['reponseA'] ?? null) === $p['id']) {
+            $reponses++;
+        }
+    }
+    return [
+        'id' => $p['id'], 'texte' => $p['texte'], 't' => $p['t'], 'reponseA' => $p['reponseA'] ?? null,
+        'auteurId' => $p['auteur'], 'nom' => $a['nom'], 'identifiant' => $a['identifiant'], 'staff' => $a['staff'],
+        'likes' => count($p['likes']), 'aime' => in_array($moi['id'], $p['likes'], true), 'reponses' => $reponses,
+        'peutSupprimer' => $p['auteur'] === $moi['id'] || estStaff($moi),
+    ];
+}
+
+function routesN(string $methode, string $route, array $moi): void
+{
+    $f = fichier('n.json');
+
+    if ($methode === 'GET' && $route === 'n/fil') {
+        $tous = lireJson($f, []);
+        $auteurs = auteursParId();
+        $filtre = trim((string) ($_GET['auteur'] ?? ''));
+        $avant = (int) ($_GET['avant'] ?? 0);
+        $depuis = (int) ($_GET['depuis'] ?? 0);
+        $liste = array_filter($tous, function ($p) use ($filtre, $auteurs, $avant, $depuis) {
+            if ($p['reponseA'] ?? null) {
+                return false;
+            }
+            if ($filtre !== '' && strcasecmp($auteurs[$p['auteur']]['identifiant'] ?? '', $filtre) !== 0) {
+                return false;
+            }
+            return (!$avant || $p['t'] < $avant) && (!$depuis || $p['t'] > $depuis);
+        });
+        usort($liste, fn($a, $b) => $b['t'] <=> $a['t']);
+        $liste = array_slice($liste, 0, 30);
+        $profil = null;
+        if ($filtre !== '') {
+            foreach ($auteurs as $id => $a) {
+                if (strcasecmp($a['identifiant'], $filtre) === 0) {
+                    $nb = count(array_filter($tous, fn($p) => $p['auteur'] === $id && !($p['reponseA'] ?? null)));
+                    $profil = ['nom' => $a['nom'], 'identifiant' => $a['identifiant'], 'staff' => $a['staff'], 'posts' => $nb];
+                }
+            }
+            if (!$profil) {
+                throw new ApiErreur('Profil introuvable.', 404);
+            }
+        }
+        repondre(200, ['posts' => array_map(fn($p) => publierPost($p, $auteurs, $tous, $moi), array_values($liste)), 'profil' => $profil]);
+    }
+
+    if ($methode === 'POST' && $route === 'n/posts') {
+        $corps = lireCorps();
+        $texte = trim(texte($corps['texte'] ?? '', 2000));
+        if ($texte === '') {
+            throw new ApiErreur('Le post est vide.');
+        }
+        if (mb_strlen($texte) > N_LONGUEUR) {
+            throw new ApiErreur('280 caractères maximum.');
+        }
+        $tous = lireJson($f, []);
+        $reponseA = $corps['reponseA'] ?? null;
+        if ($reponseA !== null && !in_array($reponseA, array_column($tous, 'id'), true)) {
+            throw new ApiErreur('Le post auquel tu réponds a été supprimé.', 404);
+        }
+        $t = (int) round(microtime(true) * 1000);
+        foreach ($tous as $p) {
+            if ($p['auteur'] === $moi['id'] && $t - $p['t'] < 5000) {
+                throw new ApiErreur('Doucement : attends quelques secondes entre deux posts.', 429);
+            }
+        }
+        $post = ['id' => uuid(), 'auteur' => $moi['id'], 'texte' => $texte, 't' => $t, 'reponseA' => $reponseA, 'likes' => []];
+        $tous[] = $post;
+        ecrireJson($f, array_slice($tous, -N_MAX_POSTS));
+        repondre(201, publierPost($post, auteursParId(), $tous, $moi));
+    }
+
+    if (preg_match('#^n/posts/([\w-]+)(/like)?$#', $route, $m)) {
+        $tous = lireJson($f, []);
+        $k = array_search($m[1], array_column($tous, 'id'), true);
+        if ($k === false) {
+            throw new ApiErreur('Ce post a été supprimé.', 404);
+        }
+        if ($methode === 'GET' && empty($m[2])) {
+            $auteurs = auteursParId();
+            $reponses = array_values(array_filter($tous, fn($p) => ($p['reponseA'] ?? null) === $m[1]));
+            usort($reponses, fn($a, $b) => $a['t'] <=> $b['t']);
+            repondre(200, ['post' => publierPost($tous[$k], $auteurs, $tous, $moi), 'reponses' => array_map(fn($p) => publierPost($p, $auteurs, $tous, $moi), $reponses)]);
+        }
+        if ($methode === 'POST' && !empty($m[2])) {
+            $likes = $tous[$k]['likes'];
+            $tous[$k]['likes'] = in_array($moi['id'], $likes, true) ? array_values(array_diff($likes, [$moi['id']])) : array_merge($likes, [$moi['id']]);
+            ecrireJson($f, $tous);
+            repondre(200, publierPost($tous[$k], auteursParId(), $tous, $moi));
+        }
+        if ($methode === 'DELETE' && empty($m[2])) {
+            if ($tous[$k]['auteur'] !== $moi['id'] && !estStaff($moi)) {
+                throw new ApiErreur('Tu ne peux supprimer que tes propres posts.', 403);
+            }
+            $id = $m[1];
+            ecrireJson($f, array_values(array_filter($tous, fn($p) => $p['id'] !== $id && ($p['reponseA'] ?? null) !== $id)));
+            if ($tous[$k]['auteur'] !== $moi['id']) {
+                journal("{$moi['identifiant']} a supprimé un post N");
+            }
+            repondre(200, ['ok' => true]);
+        }
+    }
+    throw new ApiErreur('Route inconnue.', 404);
+}
+
+// ---------- Neonous : rencontres entre personnages (majeurs) ----------
+
+const NEONOUS_GENRES = ['homme', 'femme', 'autre'];
+const NEONOUS_CHERCHE = ['homme', 'femme', 'tous'];
+
+function chargerNeonous(): array
+{
+    return lireJson(fichier('neonous.json'), ['profils' => [], 'avis' => [], 'matchs' => []]) + ['profils' => [], 'avis' => [], 'matchs' => []];
+}
+
+function sauverNeonous(array $n): void
+{
+    ecrireJson(fichier('neonous.json'), $n);
+}
+
+function compatibles(array $a, array $b): bool
+{
+    $ok = fn($cherche, $genre) => $cherche === 'tous' || $cherche === $genre;
+    return $ok($a['cherche'], $b['genre']) && $ok($b['cherche'], $a['genre']);
+}
+
+function carteProfil(string $id, array $p, array $auteurs): array
+{
+    return ['compteId' => $id, 'nom' => $auteurs[$id]['nom'] ?? 'Compte supprimé', 'age' => $p['age'], 'genre' => $p['genre'],
+        'bio' => $p['bio'], 'interets' => $p['interets'], 'ville' => $p['ville'] ?? ''];
+}
+
+function matchAvec(array $n, string $matchId, string $moiId): array
+{
+    foreach ($n['matchs'] as $mt) {
+        if ($mt['id'] === $matchId && in_array($moiId, [$mt['a'], $mt['b']], true)) {
+            return $mt;
+        }
+    }
+    throw new ApiErreur('Match introuvable.', 404);
+}
+
+function routesNeonous(string $methode, string $route, array $moi): void
+{
+    $n = chargerNeonous();
+    $moiId = $moi['id'];
+
+    if ($route === 'neonous/moi' && $methode === 'GET') {
+        $p = $n['profils'][$moiId] ?? null;
+        repondre(200, ['profil' => $p, 'nom' => $moi['nom']]);
+    }
+    if ($route === 'neonous/moi' && $methode === 'PUT') {
+        $c = lireCorps();
+        $age = (int) ($c['age'] ?? 0);
+        if ($age < 18 || $age > 99) {
+            throw new ApiErreur('Neonous est réservé aux personnages majeurs : âge entre 18 et 99 ans.');
+        }
+        if (!in_array($c['genre'] ?? '', NEONOUS_GENRES, true) || !in_array($c['cherche'] ?? '', NEONOUS_CHERCHE, true)) {
+            throw new ApiErreur('Indique ton genre et ce que tu cherches.');
+        }
+        $interets = array_slice(array_values(array_filter(array_map(fn($i) => trim(texte($i, 24)), estListe($c['interets'] ?? null) ? $c['interets'] : []), fn($i) => $i !== '')), 0, 8);
+        $n['profils'][$moiId] = ['actif' => !empty($c['actif']), 'age' => $age, 'genre' => $c['genre'], 'cherche' => $c['cherche'],
+            'bio' => trim(texte($c['bio'] ?? '', 300)), 'ville' => trim(texte($c['ville'] ?? '', 40)), 'interets' => $interets, 'maj' => time()];
+        sauverNeonous($n);
+        repondre(200, ['profil' => $n['profils'][$moiId], 'nom' => $moi['nom']]);
+    }
+
+    $monProfil = $n['profils'][$moiId] ?? null;
+    if (!$monProfil && strncmp($route, 'neonous/profils/', 16) !== 0) {
+        throw new ApiErreur('Crée d\'abord ton profil Neonous.', 409);
+    }
+
+    if ($route === 'neonous/suggestions' && $methode === 'GET') {
+        $auteurs = auteursParId();
+        $deja = $n['avis'][$moiId] ?? [];
+        $cartes = [];
+        foreach ($n['profils'] as $id => $p) {
+            if ($id === $moiId || !$p['actif'] || isset($deja[$id]) || !isset($auteurs[$id]) || ($n['avis'][$id][$moiId] ?? '') === 'pass' || !compatibles($monProfil, $p)) {
+                continue;
+            }
+            $cartes[] = carteProfil($id, $p, $auteurs);
+        }
+        shuffle($cartes);
+        repondre(200, array_slice($cartes, 0, 15));
+    }
+
+    if ($route === 'neonous/avis' && $methode === 'POST') {
+        $c = lireCorps();
+        $cible = (string) ($c['cible'] ?? '');
+        $avis = $c['avis'] ?? '';
+        if (!isset($n['profils'][$cible]) || $cible === $moiId || !in_array($avis, ['like', 'pass'], true)) {
+            throw new ApiErreur('Profil introuvable.', 404);
+        }
+        $n['avis'][$moiId][$cible] = $avis;
+        $match = null;
+        if ($avis === 'like' && ($n['avis'][$cible][$moiId] ?? '') === 'like') {
+            foreach ($n['matchs'] as $mt) {
+                if (in_array($cible, [$mt['a'], $mt['b']], true) && in_array($moiId, [$mt['a'], $mt['b']], true)) {
+                    $match = $mt;
+                }
+            }
+            if (!$match) {
+                $match = ['id' => uuid(), 'a' => $moiId, 'b' => $cible, 'cree' => time()];
+                $n['matchs'][] = $match;
+            }
+        }
+        sauverNeonous($n);
+        repondre(200, ['match' => $match ? ['id' => $match['id']] + carteProfil($cible, $n['profils'][$cible], auteursParId()) : null]);
+    }
+
+    if ($route === 'neonous/matchs' && $methode === 'GET') {
+        $auteurs = auteursParId();
+        $liste = [];
+        foreach ($n['matchs'] as $mt) {
+            if (!in_array($moiId, [$mt['a'], $mt['b']], true)) {
+                continue;
+            }
+            $autre = $mt['a'] === $moiId ? $mt['b'] : $mt['a'];
+            if (!isset($n['profils'][$autre])) {
+                continue;
+            }
+            $msgs = lireJson(fichier("neonous-{$mt['id']}.json"), []);
+            $dernier = end($msgs) ?: null;
+            $liste[] = ['id' => $mt['id'], 'cree' => $mt['cree'], 'dernier' => $dernier ? ['texte' => $dernier['texte'], 't' => $dernier['t'], 'deMoi' => $dernier['auteurId'] === $moiId] : null]
+                + carteProfil($autre, $n['profils'][$autre], $auteurs);
+        }
+        usort($liste, fn($x, $y) => ($y['dernier']['t'] ?? $y['cree'] * 1000) <=> ($x['dernier']['t'] ?? $x['cree'] * 1000));
+        repondre(200, $liste);
+    }
+
+    if (preg_match('#^neonous/matchs/([\w-]+)(/messages)?$#', $route, $m)) {
+        $mt = matchAvec($n, $m[1], $moiId);
+        $fm = fichier("neonous-{$mt['id']}.json");
+        if ($methode === 'DELETE' && empty($m[2])) {
+            // Retirer le match : plus de messages, et le profil ne revient plus dans les suggestions
+            $autre = $mt['a'] === $moiId ? $mt['b'] : $mt['a'];
+            $n['matchs'] = array_values(array_filter($n['matchs'], fn($x) => $x['id'] !== $mt['id']));
+            $n['avis'][$moiId][$autre] = 'pass';
+            sauverNeonous($n);
+            @unlink($fm);
+            repondre(200, ['ok' => true]);
+        }
+        if ($methode === 'GET' && !empty($m[2])) {
+            $depuis = (int) ($_GET['depuis'] ?? 0);
+            repondre(200, array_values(array_filter(lireJson($fm, []), fn($x) => $x['t'] > $depuis)));
+        }
+        if ($methode === 'POST' && !empty($m[2])) {
+            $txt = trim(texte(lireCorps()['texte'] ?? '', 500));
+            if ($txt === '') {
+                throw new ApiErreur('Le message est vide.');
+            }
+            $msgs = lireJson($fm, []);
+            $t = (int) round(microtime(true) * 1000);
+            $dernier = end($msgs);
+            if ($dernier && $dernier['t'] >= $t) {
+                $t = $dernier['t'] + 1;
+            }
+            $msg = ['id' => uuid(), 't' => $t, 'auteurId' => $moiId, 'nom' => $moi['nom'], 'texte' => $txt];
+            $msgs[] = $msg;
+            ecrireJson($fm, array_slice($msgs, -MAX_MESSAGES));
+            repondre(201, $msg);
+        }
+    }
+
+    // Modération : le staff peut retirer un profil (et ses matchs)
+    if ($methode === 'DELETE' && preg_match('#^neonous/profils/([\w-]+)$#', $route, $m)) {
+        if (!estStaff($moi) && $m[1] !== $moiId) {
+            throw new ApiErreur('Réservé au staff.', 403);
+        }
+        $cible = $m[1];
+        unset($n['profils'][$cible], $n['avis'][$cible]);
+        foreach ($n['matchs'] as $mt) {
+            if (in_array($cible, [$mt['a'], $mt['b']], true)) {
+                @unlink(fichier("neonous-{$mt['id']}.json"));
+            }
+        }
+        $n['matchs'] = array_values(array_filter($n['matchs'], fn($mt) => !in_array($cible, [$mt['a'], $mt['b']], true)));
+        sauverNeonous($n);
+        journal("{$moi['identifiant']} a supprimé un profil Neonous");
+        repondre(200, ['ok' => true]);
+    }
+
+    throw new ApiErreur('Route inconnue.', 404);
+}
+
 function dispatch(): void
 {
     if (!is_dir(dossierData())) {
@@ -1367,6 +1673,12 @@ function dispatch(): void
     }
     if (strncmp($route, 'entreprises', 11) === 0) {
         routesEntreprises($methode, $route, $moi);
+    }
+    if (strncmp($route, 'n/', 2) === 0) {
+        routesN($methode, $route, $moi);
+    }
+    if (strncmp($route, 'neonous/', 8) === 0) {
+        routesNeonous($methode, $route, $moi);
     }
 
     // Contenu de la tablette et liste des comptes : staff et admins

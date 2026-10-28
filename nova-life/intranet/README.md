@@ -59,6 +59,26 @@ Comme sur un iPad, le compte se gère en haut de l'app **Réglages** :
 
 Trois rôles : **Joueur** (par défaut), **Staff** et **Admin**. Un admin change le rôle d'un compte depuis l'app Staff → Comptes.
 
+## N (réseau social)
+
+App **N** (page 2 de l'accueil), sur le principe de X (Twitter), avec le compte Neoran :
+
+- **Poster :** messages de 280 caractères, avec un fil « Pour toi » du plus récent au plus ancien. Un bouton « Voir X nouveaux posts » apparaît quand d'autres joueurs postent.
+- **Interagir :** aimer un post, y répondre, ouvrir un post pour voir ses réponses.
+- **Profils :** profil de chaque joueur (ses posts) ; les `@identifiant` dans un post mènent au profil.
+- **Supprimer :** chacun supprime ses posts, et le staff peut supprimer n'importe quel post.
+- **Limites :** un post toutes les 5 secondes par joueur ; les 3 000 derniers posts sont gardés (`data/n.json`).
+
+## Neonous (rencontres)
+
+App **Neonous** (page 2 de l'accueil), une appli de rencontre entre personnages :
+
+- **Profil :** âge du personnage (18 à 99 ans, Neonous est réservé aux personnages majeurs), genre, ce que l'on cherche, ville, bio et centres d'intérêt. On peut masquer son profil.
+- **Découvrir :** les profils compatibles s'affichent en cartes, avec ✕ pour passer et ♥ pour aimer. Quand l'amour est réciproque, c'est un match.
+- **Matchs :** discussion privée pour chaque match (nouveaux messages toutes les 4 secondes). « Retirer le match » efface la discussion, et ce profil ne revient plus.
+- **Modération :** le staff peut supprimer un profil depuis les cartes. Chacun peut supprimer son propre profil.
+- **Données :** `data/neonous.json` pour les profils, avis et matchs, `data/neonous-<id>.json` pour les messages.
+
 ## Gestion entreprise
 
 L'app **Gestion entreprise** (première icône de l'accueil) :
