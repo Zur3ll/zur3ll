@@ -8,6 +8,7 @@ const {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
+  ActivityType,
   ModalBuilder,
   TextInputBuilder,
   TextInputStyle,
@@ -79,6 +80,9 @@ const FORMULAIRES = {
 };
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+
+// Texte affiché après « Joue à » sur le profil du bot.
+const STATUT_JEU = 'Garage & Concession';
 
 // Bouton posté sous chaque demande reçue, pour dire qui s'en occupe.
 const BOUTON_PRISE_ID = 'prendre_ticket';
@@ -165,6 +169,8 @@ async function publierPanneau(form) {
 
 client.once(Events.ClientReady, async () => {
   console.log(`🤖 Connecté en tant que ${client.user.tag}`);
+  // Statut « Joue à … » affiché sous le nom du bot.
+  client.user.setActivity(STATUT_JEU, { type: ActivityType.Playing });
   for (const form of Object.values(FORMULAIRES)) {
     await publierPanneau(form).catch((err) => console.error('Erreur publication panneau :', err));
   }
