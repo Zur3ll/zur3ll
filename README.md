@@ -44,7 +44,3 @@ Une question ou un bug ? Utilise `/bug` ou `/suggestion`, ou viens sur le [serve
 ---
 
 <sub>© T'DA. Tous droits réservés. Le code source de T'DA Bot n'est pas public.</sub>
-
-<br>
-
-<details>
