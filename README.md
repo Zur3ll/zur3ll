@@ -6,7 +6,7 @@
 [![Serveur support](https://img.shields.io/badge/Serveur%20support-2B2D31?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/DMF2hAPzBW)
 [![Conditions et confidentialité](https://img.shields.io/badge/CGU%20%26%20confidentialit%C3%A9-2B2D31?style=for-the-badge)](https://claude.ai/artifact/Kuu5bTcFg4PjidR97959di)
 
-![Version](https://img.shields.io/badge/version-1.16.2-blue) ![Commandes](https://img.shields.io/badge/commandes-42-green) ![Langue](https://img.shields.io/badge/langue-fran%C3%A7ais-lightgrey)
+![Version](https://img.shields.io/badge/version-1.16.4-blue) ![Commandes](https://img.shields.io/badge/commandes-42-green) ![Langue](https://img.shields.io/badge/langue-fran%C3%A7ais-lightgrey)
 
 ## ✨ Fonctionnalités
 
@@ -31,7 +31,7 @@
 | 📊 **Sondages** | Jusqu'à 10 choix, vote anonyme par boutons, résultats en direct |
 | 🔢 **Compteurs** | Salons qui affichent les membres, personnes en ligne, boosts… |
 | 📅 **Absences du staff** | Formulaire d'absence, validation par les responsables, retour annoncé |
-| 🎯 **Parties d'airsoft** | Inscriptions par boutons, liste d'attente, rappels en MP |
+| 🎯 **Parties d'airsoft** | Inscriptions par boutons, liste d'attente, rappels en MP, validation par le staff |
 | 🎂 **Anniversaires** | Annonce le jour J et rôle d'anniversaire |
 | 🎄 **Calendrier de l'Avent** | Une case par jour du 1er au 24 décembre |
 | 🤖 **Assistant IA** | Mentionne le bot pour lui poser une question |
