@@ -6,13 +6,15 @@
 [![Serveur support](https://img.shields.io/badge/Serveur%20support-2B2D31?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/DMF2hAPzBW)
 [![Conditions et confidentialité](https://img.shields.io/badge/CGU%20%26%20confidentialit%C3%A9-2B2D31?style=for-the-badge)](https://claude.ai/artifact/Kuu5bTcFg4PjidR97959di)
 
-![Version](https://img.shields.io/badge/version-1.15.2-blue) ![Commandes](https://img.shields.io/badge/commandes-27-green) ![Langue](https://img.shields.io/badge/langue-fran%C3%A7ais-lightgrey)
+![Version](https://img.shields.io/badge/version-1.16.2-blue) ![Commandes](https://img.shields.io/badge/commandes-42-green) ![Langue](https://img.shields.io/badge/langue-fran%C3%A7ais-lightgrey)
 
 ## ✨ Fonctionnalités
 
 | Module | Ce qu'il fait |
 |---|---|
 | 🛡️ **Protection** | Anti-raid, verrouillage du serveur, bilan de sécurité hebdomadaire noté sur 100 |
+| 🔨 **Modération** | `/warn`, `/mute`, `/kick`, `/ban` temporaire, `/clear`… casier des sanctions et échelle automatique |
+| 🚫 **Mots interdits** | Supprime les messages contenant les mots choisis, même déguisés |
 | 📜 **Logs** | 15 catégories : messages, membres, rôles, invitations, AutoMod, vocal… |
 | 🎫 **Tickets** | Tickets par sujet avec formulaires, prise en charge, priorité, ajout de membres |
 | 👋 **Arrivées & départs** | Messages de bienvenue et d'au revoir personnalisables |
@@ -25,6 +27,11 @@
 | 🟣 **Lives Twitch** | Annonce automatique quand un streamer passe en live |
 | 🎮 **Jeux gratuits** | Jeux offerts sur Epic Games, Steam et GOG |
 | 💰 **Économie** | Monnaie « T'Coins », travail, classement, boutique |
+| ⭐ **Niveaux et XP** | XP en discutant et en vocal, rôles débloqués, T'Coins à chaque niveau |
+| 📊 **Sondages** | Jusqu'à 10 choix, vote anonyme par boutons, résultats en direct |
+| 🔢 **Compteurs** | Salons qui affichent les membres, personnes en ligne, boosts… |
+| 📅 **Absences du staff** | Formulaire d'absence, validation par les responsables, retour annoncé |
+| 🎯 **Parties d'airsoft** | Inscriptions par boutons, liste d'attente, rappels en MP |
 | 🎂 **Anniversaires** | Annonce le jour J et rôle d'anniversaire |
 | 🎄 **Calendrier de l'Avent** | Une case par jour du 1er au 24 décembre |
 | 🤖 **Assistant IA** | Mentionne le bot pour lui poser une question |
