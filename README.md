@@ -10,6 +10,8 @@
 
 ## 🆕 Dernières nouveautés
 
+- 🛠️ **v1.21.3 — Dépannage sans blocage** : le créateur du bot n'est plus visé par les sanctions, la protection automatique et les délais d'attente du bot. Il peut donc intervenir et dépanner ton serveur à tout moment. Les administrateurs gardent tous les outils de Discord.
+- 🎂 **v1.21.2 — Anniversaires partagés** : avec l'option `partout`, ton anniversaire est souhaité sur tous tes serveurs, sans le réenregistrer. Ton âge n'est jamais partagé.
 - 📣 **Publicité interserveur** : ta pub diffusée sur les serveurs partenaires, selon leurs genres (communautaire, gaming, airsoft)
 - 🌐 **Réseaux sociaux** : un panneau avec un bouton par réseau (Instagram, TikTok, YouTube, X, avis Google…)
 - 💤 **Système AFK** : les membres inactifs en vocal sont déplacés dans le salon AFK, et reviennent tout seuls
