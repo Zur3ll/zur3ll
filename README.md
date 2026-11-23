@@ -6,7 +6,7 @@
 [![Serveur support](https://img.shields.io/badge/Serveur%20support-2B2D31?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/DMF2hAPzBW)
 [![Conditions et confidentialité](https://img.shields.io/badge/CGU%20%26%20confidentialit%C3%A9-2B2D31?style=for-the-badge)](https://claude.ai/artifact/Kuu5bTcFg4PjidR97959di)
 
-![Version](https://img.shields.io/badge/version-1.21.1-blue) ![Modules](https://img.shields.io/badge/modules-29-orange) ![Commandes](https://img.shields.io/badge/commandes-49-green) ![Langue](https://img.shields.io/badge/langue-fran%C3%A7ais-lightgrey)
+![Version](https://img.shields.io/badge/version-1.21.3-blue) ![Modules](https://img.shields.io/badge/modules-29-orange) ![Commandes](https://img.shields.io/badge/commandes-49-green) ![Langue](https://img.shields.io/badge/langue-fran%C3%A7ais-lightgrey)
 
 ## 🆕 Dernières nouveautés
 
@@ -44,7 +44,7 @@ Les modules sont rangés comme dans `/config`, en 4 catégories. Chacun s'active
 | 💰 **Économie** | Monnaie « T'Coins », travail, classement, boutique avec liens et images |
 | 🎁 **QR codes de récompense** | Le staff crée un code qui donne des T'Coins, valable 24 h |
 | ⭐ **Niveaux et XP** | XP en discutant et en vocal, rôles débloqués, T'Coins à chaque niveau |
-| 🎂 **Anniversaires** | Annonce le jour J et rôle d'anniversaire |
+| 🎂 **Anniversaires** | Annonce le jour J et rôle d'anniversaire, sur un seul serveur ou sur tous tes serveurs |
 | 🎄 **Calendrier de l'Avent** | Une case par jour du 1er au 24 décembre |
 | 📊 **Sondages** | Jusqu'à 10 choix, vote anonyme par boutons, résultats en direct |
 | 💡 **Boîte à idées** | Idées des membres, votes 👍 / 👎, fil de discussion, réponse du staff en MP |
