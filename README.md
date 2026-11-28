@@ -6,10 +6,11 @@
 [![Serveur support](https://img.shields.io/badge/Serveur%20support-2B2D31?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/DMF2hAPzBW)
 [![Conditions et confidentialité](https://img.shields.io/badge/CGU%20%26%20confidentialit%C3%A9-2B2D31?style=for-the-badge)](https://claude.ai/artifact/Kuu5bTcFg4PjidR97959di)
 
-![Version](https://img.shields.io/badge/version-1.21.3-blue) ![Modules](https://img.shields.io/badge/modules-29-orange) ![Commandes](https://img.shields.io/badge/commandes-49-green) ![Langue](https://img.shields.io/badge/langue-fran%C3%A7ais-lightgrey)
+![Version](https://img.shields.io/badge/version-1.22.0-blue) ![Modules](https://img.shields.io/badge/modules-29-orange) ![Commandes](https://img.shields.io/badge/commandes-49-green) ![Langue](https://img.shields.io/badge/langue-fran%C3%A7ais-lightgrey)
 
 ## 🆕 Dernières nouveautés
 
+- 🎥 **v1.22.0 — Rôle « en live »** : les membres qui streament sur Discord reçoivent automatiquement un rôle, retiré à la fin du live. Parfait pour mettre les streamers du serveur en avant dans la liste des membres !
 - 🛠️ **v1.21.3 — Dépannage sans blocage** : le créateur du bot n'est plus visé par les sanctions, la protection automatique et les délais d'attente du bot. Il peut donc intervenir et dépanner ton serveur à tout moment. Les administrateurs gardent tous les outils de Discord.
 - 🎂 **v1.21.2 — Anniversaires partagés** : avec l'option `partout`, ton anniversaire est souhaité sur tous tes serveurs, sans le réenregistrer. Ton âge n'est jamais partagé.
 - 📣 **Publicité interserveur** : ta pub diffusée sur les serveurs partenaires, selon leurs genres (communautaire, gaming, airsoft)
@@ -55,7 +56,7 @@ Les modules sont rangés comme dans `/config`, en 4 catégories. Chacun s'active
 
 | Module | Ce qu'il fait |
 |---|---|
-| 🟣 **Lives Twitch** | Annonce automatique quand un streamer passe en live |
+| 🟣 **Lives Twitch** | Annonce automatique quand un streamer passe en live, rôle « en live » pour les membres qui streament |
 | 📺 **Annonces YouTube** | Nouvelles vidéos et Shorts annoncés avec le lecteur intégré |
 | 🌐 **Réseaux sociaux** | Panneau avec un bouton par réseau, mis à jour tout seul |
 | 📣 **Publicité interserveur** | `/pub` : ta pub diffusée chez les partenaires, validée avant publication |
