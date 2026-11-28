@@ -6,10 +6,11 @@
 [![Serveur support](https://img.shields.io/badge/Serveur%20support-2B2D31?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/DMF2hAPzBW)
 [![Conditions et confidentialité](https://img.shields.io/badge/CGU%20%26%20confidentialit%C3%A9-2B2D31?style=for-the-badge)](https://claude.ai/artifact/Kuu5bTcFg4PjidR97959di)
 
-![Version](https://img.shields.io/badge/version-1.22.0-blue) ![Modules](https://img.shields.io/badge/modules-29-orange) ![Commandes](https://img.shields.io/badge/commandes-49-green) ![Langue](https://img.shields.io/badge/langue-fran%C3%A7ais-lightgrey)
+![Version](https://img.shields.io/badge/version-1.23.0-blue) ![Modules](https://img.shields.io/badge/modules-30-orange) ![Commandes](https://img.shields.io/badge/commandes-50-green) ![Langue](https://img.shields.io/badge/langue-fran%C3%A7ais-lightgrey)
 
 ## 🆕 Dernières nouveautés
 
+- 📈 **v1.23.0 — Statistiques avec graphiques** : `/stats` montre l'activité du serveur (messages, vocal, membres actifs, arrivées et départs), les classements, les salons et les heures les plus actives, sur 7, 30 ou 90 jours. Un bilan de la semaine est publié tout seul le lundi, et `/stats masquer` permet de ne pas être compté.
 - 🎥 **v1.22.0 — Rôle « en live »** : les membres qui streament sur Discord reçoivent automatiquement un rôle, retiré à la fin du live. Parfait pour mettre les streamers du serveur en avant dans la liste des membres !
 - 🛠️ **v1.21.3 — Dépannage sans blocage** : le créateur du bot n'est plus visé par les sanctions, la protection automatique et les délais d'attente du bot. Il peut donc intervenir et dépanner ton serveur à tout moment. Les administrateurs gardent tous les outils de Discord.
 - 🎂 **v1.21.2 — Anniversaires partagés** : avec l'option `partout`, ton anniversaire est souhaité sur tous tes serveurs, sans le réenregistrer. Ton âge n'est jamais partagé.
@@ -72,6 +73,7 @@ Les modules sont rangés comme dans `/config`, en 4 catégories. Chacun s'active
 | 🌍 **Traduction** | `/traduire` ou clic droit sur un message |
 | 🤖 **Assistant IA** | Mentionne le bot pour lui poser une question |
 | 🔢 **Compteurs** | Membres, personnes en ligne, boosts, parties créées… ou compteurs personnalisés |
+| 📈 **Statistiques** | Graphiques d'activité, classements, bilan hebdomadaire, option pour ne pas être compté |
 
 🔒 **Données personnelles** : avec `/mes-donnees`, chacun peut voir, télécharger ou faire supprimer ses données (RGPD).
 
